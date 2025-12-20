@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labBench-communication"
+version = "0.1.0"
+description = "Communication with LabBench devices"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Kristian Hennings" }
+]
+requires-python = ">=3.9"
+
+dependencies = [
+    # Keep core lightweight; add only what is truly required
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+serial = [
+    "pyserial>=3.5"
+]
+
+tcp = [
+    # usually stdlib only, but here for symmetry / future use
+]
+
+usb = [
+    "pyusb>=1.2"
+]
+
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "mypy",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/labbench-comm"
+Repository = "https://github.com/your-org/labbench-comm"
+Issues = "https://github.com/your-org/labbench-comm/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+ignore_missing_imports = true

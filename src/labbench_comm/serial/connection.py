@@ -119,7 +119,6 @@ class PySerialIO(SerialIO):
             written = ser.write(data)
             if self._flush_on_write:
                 ser.flush()
-            self._log.debug(f"Bytes written: {data}")
         except SerialException as exc:
             raise SerialConnectionError("Serial write failed") from exc
 
@@ -148,12 +147,7 @@ class PySerialIO(SerialIO):
         except SerialException as exc:
             raise SerialConnectionError("Non-blocking read failed") from exc
 
-        n = len(data)
-
-        if n > 0:
-            self._log.debug(f"Bytes read: {data}")
-
-        return n, data
+        return len(data), data
 
     # -------------------- Utilities -------------------- #
 

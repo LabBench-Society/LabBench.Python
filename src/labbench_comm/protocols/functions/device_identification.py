@@ -65,35 +65,35 @@ class DeviceIdentification(DeviceFunction):
 
     @property
     def major_version(self) -> int:
-        return self.response.get_uint8(10)
+        return self.response.get_byte(10)
 
     @major_version.setter
     def major_version(self, value: int) -> None:
-        self.response.insert_uint8(10, value)
+        self.response.insert_byte(10, value)
 
     @property
     def minor_version(self) -> int:
-        return self.response.get_uint8(11)
+        return self.response.get_byte(11)
 
     @minor_version.setter
     def minor_version(self, value: int) -> None:
-        self.response.insert_uint8(11, value)
+        self.response.insert_byte(11, value)
 
     @property
     def patch_version(self) -> int:
-        return self.response.get_uint8(12)
+        return self.response.get_byte(12)
 
     @patch_version.setter
     def patch_version(self, value: int) -> None:
-        self.response.insert_uint8(12, value)
+        self.response.insert_byte(12, value)
 
     @property
     def engineering_version(self) -> int:
-        return self.response.get_uint8(13)
+        return self.response.get_byte(13)
 
     @engineering_version.setter
     def engineering_version(self, value: int) -> None:
-        self.response.insert_uint8(13, value)
+        self.response.insert_byte(13, value)
 
     @property
     def version(self) -> str:

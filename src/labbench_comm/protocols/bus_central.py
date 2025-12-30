@@ -151,7 +151,7 @@ class BusCentral:
         self._completion_event.set()
 
     def _handle_error_packet(self, packet: Packet) -> None:
-        error_code = packet.get_uint8(0)
+        error_code = packet.get_byte(0)
         message = self._device.get_error_string(error_code)
         self._current_exception = FunctionNotAcknowledgedError(message)
         self._completion_event.set()

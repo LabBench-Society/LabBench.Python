@@ -1,38 +1,69 @@
 import asyncio
+from typing import Optional
+
+from labbench_comm.serial.base import SerialIO
+from labbench_comm.protocols.destuffer import Destuffer
 
 
-class AsyncSerialConnection(AsyncConnection):
+class AsyncSerialConnection:
+    """
+    Async transport wrapper around a non-blocking SerialIO.
+    """
 
-    def __init__(self, serial_io):
+    def __init__(self, serial_io: SerialIO) -> None:
         self._io = serial_io
-        self._destuffer = None
-        self._reader_task = None
+        self._destuffer: Optional[Destuffer] = None
+
+        self._reader_task: Optional[asyncio.Task] = None
         self._running = False
 
-    def attach_destuffer(self, destuffer):
+    # ------------------------------------------------------------------
+    # Lifecycle
+    # ------------------------------------------------------------------
+
+    def attach_destuffer(self, destuffer: Destuffer) -> None:
         self._destuffer = destuffer
 
-    async def open(self):
+    async def open(self) -> None:
         self._io.open()
         self._running = True
         self._reader_task = asyncio.create_task(self._reader_loop())
 
-    async def close(self):
+    async def close(self) -> None:
         self._running = False
+
         if self._reader_task:
             self._reader_task.cancel()
+            try:
+                await self._reader_task
+            except asyncio.CancelledError:
+                pass
+
         self._io.close()
 
     @property
-    def is_open(self):
+    def is_open(self) -> bool:
         return self._io.is_open
 
-    async def write_bytes(self, data: bytes):
+    # ------------------------------------------------------------------
+    # I/O
+    # ------------------------------------------------------------------
+
+    async def write_bytes(self, data: bytes) -> None:
         await asyncio.to_thread(self._io.write_bytes, data)
 
-    async def _reader_loop(self):
-        while self._running:
-            n, data = self._io.read_nonblocking(1024)
-            if n and self._destuffer:
-                self._destuffer.add_bytes(data)
-            await asyncio.sleep(0)
+    # ------------------------------------------------------------------
+    # Background reader
+    # ------------------------------------------------------------------
+
+    async def _reader_loop(self) -> None:
+        try:
+            while self._running:
+                n, data = self._io.read_nonblocking(1024)
+                if n and self._destuffer:
+                    self._destuffer.add_bytes(data)
+
+                # Yield to the event loop (no busy loop)
+                await asyncio.sleep(0)
+        except asyncio.CancelledError:
+            pass

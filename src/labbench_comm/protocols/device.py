@@ -24,21 +24,19 @@ class Device(ABC):
     - message handling
     """
 
-    # ------------------------------------------------------------------
-    # Construction
-    # ------------------------------------------------------------------
-
     def __init__(self, bus: BusMaster) -> None:
         self.central = bus
         self.central.message_listener = self
 
-        self.timeout_ms: int = 500
         self.retries: int = 1
         self.ping_enabled: bool = False
 
         self.current_address: Optional[int] = None
 
+        # Metadata only (not used by the framework directly)
         self._functions: List[DeviceFunction] = []
+
+        # Default debug message support
         self.central.add_message(PrintfMessage())
 
     # ------------------------------------------------------------------
@@ -50,14 +48,16 @@ class Device(ABC):
         return self.central.is_open
 
     # ------------------------------------------------------------------
-    # Function registration
+    # Function / message registration
     # ------------------------------------------------------------------
 
     @property
     def functions(self) -> List[DeviceFunction]:
-        return self._functions
+        return list(self._functions)
 
     def add_function(self, function: DeviceFunction) -> None:
+        if function is None:
+            raise ValueError("function must not be None")
         self._functions.append(function)
 
     def add_message(self, message: DeviceMessage) -> None:
@@ -77,6 +77,8 @@ class Device(ABC):
             ping = self.create_ping()
             await self.execute(ping)
             return int(ping.count)
+        except asyncio.CancelledError:
+            raise
         except Exception:
             return -1
 
@@ -92,9 +94,6 @@ class Device(ABC):
 
     @abstractmethod
     def is_compatible(self, function: DeviceFunction) -> bool:
-        """
-        Determine whether the connected peripheral is compatible.
-        """
         raise NotImplementedError
 
     # ------------------------------------------------------------------
@@ -102,14 +101,12 @@ class Device(ABC):
     # ------------------------------------------------------------------
 
     async def open(self) -> None:
-        if self.central.is_open:
-            return
-        await self.central.open()
+        if not self.central.is_open:
+            await self.central.open()
 
     async def close(self) -> None:
-        if not self.central.is_open:
-            return
-        await self.central.close()
+        if self.central.is_open:
+            await self.central.close()
 
     # ------------------------------------------------------------------
     # Execution
@@ -122,31 +119,37 @@ class Device(ABC):
         if function is None:
             return
 
-        last_error: Optional[Exception] = None
+        if not self.central.is_open:
+            raise RuntimeError("Device is not open")
 
         for attempt in range(self.retries):
             try:
                 start = time.monotonic()
                 await self.central.execute(function, self.current_address)
-                elapsed_ms = int((time.monotonic() - start) * 1000)
-                function.transmission_time = elapsed_ms
+                function.transmission_time = int(
+                    (time.monotonic() - start) * 1000
+                )
                 return
-            except Exception as exc:
-                last_error = exc
+            except asyncio.CancelledError:
+                raise
+            except Exception:
                 if attempt == self.retries - 1:
                     raise
 
-        if last_error:
-            raise last_error
-
     async def send(self, message: DeviceMessage) -> None:
+        if message is None:
+            return
         await self.central.send(message, self.current_address)
 
     # ------------------------------------------------------------------
     # Message handlers
     # ------------------------------------------------------------------
 
-    def accept(self, message: PrintfMessage):
+    def accept(self, message: PrintfMessage) -> None:
+        """
+        Default handler for PrintfMessage.
+        Subclasses may override.
+        """
         print(message.debug_message)
 
     def get_error_string(self, error_code: int) -> str:
@@ -176,14 +179,22 @@ class Device(ABC):
     # ------------------------------------------------------------------
 
     async def identify_and_check(self) -> None:
-        """
-        Perform device identification and compatibility check.
-        """
         ident = self.create_identification_function()
         await self.execute(ident)
 
         if not self.is_compatible(ident):
             raise IncompatibleDeviceError(str(ident))
+
+    # ------------------------------------------------------------------
+    # Async context manager
+    # ------------------------------------------------------------------
+
+    async def __aenter__(self):
+        await self.open()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.close()
 
     # ------------------------------------------------------------------
     # Representation

@@ -1,6 +1,4 @@
 import asyncio
-import time
-from enum import Enum, auto
 from typing import Optional, Any
 
 from labbench_comm.protocols.frame import Frame
@@ -16,16 +14,15 @@ from labbench_comm.protocols.exceptions import (
 )
 
 
-class _CommState(Enum):
-    IDLE = auto()
-    WAITING = auto()
-    COMPLETED = auto()
-    ERROR = auto()
-
-
 class BusCentral:
     """
-    Asyncio-based central coordinator for device communication.
+    Asyncio-based coordinator for device communication.
+
+    Responsibilities:
+    - Serialize function execution
+    - Handle request/response matching
+    - Dispatch unsolicited messages
+    - Enforce timeouts
     """
 
     def __init__(self, device: Any, connection) -> None:
@@ -34,7 +31,6 @@ class BusCentral:
 
         self._destuffer = Destuffer()
         self._destuffer.on_receive(self._handle_incoming_frame)
-
         self._connection.attach_destuffer(self._destuffer)
 
         self.timeout_ms: int = 500
@@ -44,11 +40,9 @@ class BusCentral:
 
         self._current_function: Optional[DeviceFunction] = None
         self._current_exception: Optional[Exception] = None
-        self._state = _CommState.IDLE
 
         self._completion_event = asyncio.Event()
         self._lock = asyncio.Lock()
-        self._start_time = 0.0
 
     # ------------------------------------------------------------------
     # Connection lifecycle
@@ -76,41 +70,41 @@ class BusCentral:
         if function is None:
             return
 
+        if not self.is_open:
+            raise RuntimeError("Connection is not open")
+
         async with self._lock:
-            await self._initiate(function, address)
+            self._completion_event.clear()
+            self._current_function = function
+            self._current_exception = None
 
             try:
+                await self._send_request(function, address)
+
                 await asyncio.wait_for(
                     self._completion_event.wait(),
                     timeout=self.timeout_ms / 1000.0,
                 )
-            except asyncio.TimeoutError:
-                self._state = _CommState.ERROR
-                self._current_exception = PeripheralNotRespondingError(
-                    "No response from device"
-                )
 
-            self._completion_event.clear()
-            self._state = _CommState.IDLE
+            except asyncio.TimeoutError:
+                raise PeripheralNotRespondingError("No response from device")
+
+            finally:
+                # Ensure clean state even on cancellation
+                self._completion_event.clear()
+                self._current_function = None
 
             if self._current_exception is not None:
                 raise self._current_exception
 
-    async def _initiate(
+    async def _send_request(
         self,
         function: DeviceFunction,
         address: Optional[int],
     ) -> None:
         function.on_send()
-
         request_bytes = function.get_request(address or 0)
         framed = Frame.encode(request_bytes)
-
-        self._current_function = function
-        self._current_exception = None
-        self._state = _CommState.WAITING
-        self._start_time = time.monotonic()
-
         await self._connection.write_bytes(framed)
 
     # ------------------------------------------------------------------
@@ -138,16 +132,15 @@ class BusCentral:
             packet = Packet.from_frame(frame)
         except PacketFormatError:
             return
-        except Exception:
+
+        if packet.code == 0x00:
+            self._handle_error_packet(packet)
             return
 
-        if packet.code != 0x00:
-            if packet.is_function:
-                self._handle_function_response(packet)
-            else:
-                self._dispatch_message(packet)
+        if packet.is_function:
+            self._handle_function_response(packet)
         else:
-            self._handle_error_packet(packet)
+            self._dispatch_message(packet)
 
     def _handle_function_response(self, packet: Packet) -> None:
         if self._current_function is None:
@@ -155,16 +148,12 @@ class BusCentral:
 
         self._current_function.set_response(packet)
         self._current_function.on_received()
-
-        self._state = _CommState.COMPLETED
         self._completion_event.set()
 
     def _handle_error_packet(self, packet: Packet) -> None:
         error_code = packet.get_uint8(0)
         message = self._device.get_error_string(error_code)
-
         self._current_exception = FunctionNotAcknowledgedError(message)
-        self._state = _CommState.ERROR
         self._completion_event.set()
 
     # ------------------------------------------------------------------
@@ -190,7 +179,7 @@ class BusCentral:
         self._dispatchers[code] = message.create_dispatcher()
 
     # ------------------------------------------------------------------
-    # Context manager helpers
+    # Async context manager
     # ------------------------------------------------------------------
 
     async def __aenter__(self):

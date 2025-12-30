@@ -2,7 +2,7 @@ import pytest
 
 from labbench_comm.protocols.destuffer import Destuffer, Frame
 
-
+@pytest.mark.unittest
 def test_single_frame_roundtrip():
     destuffer = Destuffer()
     received = []
@@ -23,7 +23,7 @@ def test_single_frame_roundtrip():
 
     assert received == [payload]
 
-
+@pytest.mark.unittest
 def test_dle_escaping():
     destuffer = Destuffer()
     received = []
@@ -41,7 +41,7 @@ def test_dle_escaping():
 
     assert received == [payload]
 
-
+@pytest.mark.unittest
 def test_chunked_input():
     destuffer = Destuffer()
     received = []
@@ -60,7 +60,7 @@ def test_chunked_input():
 
     assert received == [b"\x10\x20"]
 
-
+@pytest.mark.unittest
 def test_invalid_sequence_is_discarded():
     destuffer = Destuffer()
     received = []

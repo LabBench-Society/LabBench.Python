@@ -4,9 +4,10 @@ import asyncio
 from labbench_comm.protocols.destuffer import Destuffer
 from labbench_comm.protocols.frame import Frame
 from labbench_comm.serial.async_serial_connection import AsyncSerialConnection
+from labbench_comm.serial.base import SerialIO
 
 
-class FakeSerialIO:
+class FakeSerialIO(SerialIO):
     def __init__(self):
         self._open = False
         self._rx = bytearray()
@@ -39,6 +40,7 @@ class FakeSerialIO:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unittest
 async def test_async_serial_connection_reads():
     serial = FakeSerialIO()
     conn = AsyncSerialConnection(serial)
@@ -62,6 +64,7 @@ async def test_async_serial_connection_reads():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unittest
 async def test_reader_cancellation():
     serial = FakeSerialIO()
     conn = AsyncSerialConnection(serial)

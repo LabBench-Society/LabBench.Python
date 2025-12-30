@@ -65,7 +65,8 @@ where = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
 markers = [
-    "hardware: tests that require real hardware"
+    "hardware: tests that require real hardware",
+    "unittest: unit tests of individual classes"
 ]
 log_cli = true
 log_cli_level = "DEBUG"

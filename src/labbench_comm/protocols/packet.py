@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import Tuple
 import struct
 
-from labbench_comm.protocols.exceptions import PacketFormatError
+from labbench_comm.protocols.exceptions import ChecksumError, PacketFormatError
 from labbench_comm.utils.additive_checksum import additive_checksum
 from labbench_comm.utils.crc8_ccitt import crc8_ccitt
 
@@ -265,6 +265,6 @@ class Packet:
             return
 
         if actual != expected:
-            raise PacketFormatError(
+            raise ChecksumError(
                 f"Checksum mismatch (expected {expected}, got {actual})"
             )

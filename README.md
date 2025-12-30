@@ -31,7 +31,7 @@ Running tests
 Once the package is installed, run the unit test suite with:
 
 ```
-python -m pytest -m "not hardware"
+python -m pytest -m unittest -v
 ```
 
 Using `python -m pytest` ensures that tests are executed using the same Python environment into which the package was installed.
@@ -39,5 +39,5 @@ Using `python -m pytest` ensures that tests are executed using the same Python e
 Integration tests can be run with:
 
 ```
-python -m pytest -m hardware --log-cli-level=DEBUG
+python -m pytest -m hardware -v
 ```

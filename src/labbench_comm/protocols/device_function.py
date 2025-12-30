@@ -197,6 +197,9 @@ class DeviceFunction(ABC):
     @property
     def request(self) -> Packet:
         return self._request
+    
+    def set_request(self, request) -> None:
+        self._request = request
 
     @property
     def response(self) -> Packet:

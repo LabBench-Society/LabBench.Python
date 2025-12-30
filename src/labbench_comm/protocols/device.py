@@ -10,6 +10,7 @@ from labbench_comm.protocols.functions.device_identification import DeviceIdenti
 from labbench_comm.protocols.functions.ping import Ping
 from labbench_comm.protocols.error_codes import ErrorCode
 from labbench_comm.protocols.exceptions import IncompatibleDeviceError
+from labbench_comm.protocols.messages import PrintfMessage
 
 
 class Device(ABC):
@@ -38,6 +39,7 @@ class Device(ABC):
         self.current_address: Optional[int] = None
 
         self._functions: List[DeviceFunction] = []
+        self.central.add_message(PrintfMessage())
 
     # ------------------------------------------------------------------
     # Properties
@@ -143,6 +145,9 @@ class Device(ABC):
     # ------------------------------------------------------------------
     # Message handlers
     # ------------------------------------------------------------------
+
+    def accept(self, message: PrintfMessage):
+        print(message.debug_message)
 
     def get_error_string(self, error_code: int) -> str:
         """

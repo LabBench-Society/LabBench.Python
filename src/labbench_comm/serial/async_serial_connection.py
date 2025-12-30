@@ -88,10 +88,8 @@ class AsyncSerialConnection:
         if not self.is_open:
             raise RuntimeError("Connection is not open")
 
-
         # Offload blocking write
         await asyncio.to_thread(self._io.write_bytes, data)
-        self.log.debug(f"Bytes written: {data}")
 
     # ------------------------------------------------------------------
     # Background reader
@@ -101,6 +99,9 @@ class AsyncSerialConnection:
         try:
             while True:
                 n, data = self._io.read_nonblocking(1024)
+
+                if n > 0:
+                    self.log.debug(f"bytes read: {data}")
 
                 if n and self._destuffer:
                     self._destuffer.add_bytes(data)

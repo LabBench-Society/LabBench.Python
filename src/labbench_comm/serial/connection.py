@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 import serial
 from serial import SerialException
 import serial.tools.list_ports
+import logging
 
 from labbench_comm.serial.base import SerialIO
 from labbench_comm.core.exceptions import (
@@ -45,6 +46,7 @@ class PySerialIO(SerialIO):
         self._flush_on_write = flush_on_write
 
         self._serial: Optional[serial.Serial] = None
+        self._log = logging.getLogger(__name__)
 
     # -------------------- Lifecycle -------------------- #
 
@@ -106,6 +108,7 @@ class PySerialIO(SerialIO):
             written = ser.write(data)
             if self._flush_on_write:
                 ser.flush()
+            self._log.debug(f"Bytes written: {data}")
         except SerialException as exc:
             raise SerialConnectionError("Serial write failed") from exc
 
@@ -134,7 +137,12 @@ class PySerialIO(SerialIO):
         except SerialException as exc:
             raise SerialConnectionError("Non-blocking read failed") from exc
 
-        return len(data), data
+        n = len(data)
+
+        if n > 0:
+            self._log.debug(f"Bytes read: {data}")
+
+        return n, data
 
     # -------------------- Utilities -------------------- #
 

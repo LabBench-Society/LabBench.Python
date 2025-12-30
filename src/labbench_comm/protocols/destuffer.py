@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum, auto
 from typing import Callable, List, Optional
-
+import logging
 
 class Frame:
     """
@@ -34,6 +34,7 @@ class Destuffer:
         self._buffer = bytearray()
         self._raw = bytearray()  # kept for parity with C# (future use)
         self._callbacks: List[Callable[[Destuffer, bytes], None]] = []
+        self.log = logging.getLogger(__name__)
 
     # ------------------------------------------------------------------
     # Public API
@@ -69,6 +70,8 @@ class Destuffer:
 
         elif self._state is _State.WAITING_FOR_ETX:
             self._handle_waiting_for_etx(data)
+
+        self.log.debug(f"RECEIVED BYTE: {data} => state: {self._state}")
 
     # ------------------------------------------------------------------
     # State handlers (direct port of C# logic)

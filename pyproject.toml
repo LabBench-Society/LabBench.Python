@@ -67,6 +67,8 @@ addopts = "-ra"
 markers = [
     "hardware: tests that require real hardware"
 ]
+log_cli = true
+log_cli_level = "DEBUG"
 
 [tool.ruff]
 line-length = 100

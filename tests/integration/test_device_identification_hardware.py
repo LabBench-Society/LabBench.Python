@@ -50,7 +50,7 @@ async def test_device_identification_hardware_windows():
     """
 
     port = get_first_serial_port()
-    baudrate = 115200
+    baudrate = 38400
 
     serial_io = PySerialIO(
         port=port,

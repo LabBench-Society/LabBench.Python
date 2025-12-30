@@ -27,13 +27,13 @@ class PySerialIO(SerialIO):
     def __init__(
         self,
         port: str,
-        baudrate: int = 115200,
+        baudrate: int = 38400,
         write_timeout: float = 1.0,
         *,
         bytesize: int = serial.EIGHTBITS,
         parity: str = serial.PARITY_NONE,
         stopbits: int = serial.STOPBITS_ONE,
-        flush_on_write: bool = False,
+        flush_on_write: bool = True,
     ) -> None:
         self._port = port
         self._baudrate = baudrate

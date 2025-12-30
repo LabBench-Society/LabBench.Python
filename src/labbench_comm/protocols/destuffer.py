@@ -71,8 +71,6 @@ class Destuffer:
         elif self._state is _State.WAITING_FOR_ETX:
             self._handle_waiting_for_etx(data)
 
-        self.log.debug(f"RECEIVED BYTE: {data} => state: {self._state}")
-
     # ------------------------------------------------------------------
     # State handlers (direct port of C# logic)
     # ------------------------------------------------------------------

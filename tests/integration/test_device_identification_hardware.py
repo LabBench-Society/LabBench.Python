@@ -55,6 +55,7 @@ async def test_device_identification_hardware_windows():
     serial_io = PySerialIO(
         port=port,
         baudrate=baudrate,
+        dtr=True
     )
 
     connection = AsyncSerialConnection(serial_io)
@@ -65,6 +66,7 @@ async def test_device_identification_hardware_windows():
 
     try:
         await device.open()
+        await asyncio.sleep(1.0)
 
         ident = DeviceIdentification()
         await device.execute(ident)

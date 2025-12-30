@@ -1,5 +1,6 @@
 import asyncio
 import time
+import logging
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
@@ -32,6 +33,7 @@ class Device(ABC):
         self.ping_enabled: bool = False
 
         self.current_address: Optional[int] = None
+        self._log = logging.getLogger(__name__)
 
         # Default debug message support
         self.central.add_message(PrintfMessage())
@@ -147,7 +149,7 @@ class Device(ABC):
         Default handler for PrintfMessage.
         Subclasses may override.
         """
-        print(message.debug_message)
+        self._log.debug(f"DEVICE PRINTF: {message.debug_message}")
 
     def get_error_string(self, error_code: int) -> str:
         """

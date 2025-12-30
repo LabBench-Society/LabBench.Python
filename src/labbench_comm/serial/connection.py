@@ -34,7 +34,8 @@ class PySerialIO(SerialIO):
         bytesize: int = serial.EIGHTBITS,
         parity: str = serial.PARITY_NONE,
         stopbits: int = serial.STOPBITS_ONE,
-        flush_on_write: bool = True,
+        flush_on_write: bool = True,        
+        dtr: bool = None,
     ) -> None:
         self._port = port
         self._baudrate = baudrate
@@ -44,6 +45,7 @@ class PySerialIO(SerialIO):
         self._parity = parity
         self._stopbits = stopbits
         self._flush_on_write = flush_on_write
+        self._dtr = dtr
 
         self._serial: Optional[serial.Serial] = None
         self._log = logging.getLogger(__name__)
@@ -77,6 +79,16 @@ class PySerialIO(SerialIO):
                     f"Serial port {self._port} did not open correctly"
                 )
 
+        # Explicit DTR control
+        if self._dtr is not None:
+            try:
+                ser.dtr = self._dtr
+            except SerialException as exc:
+                ser.close()
+                raise SerialConnectionError(
+                    "Failed to set DTR"
+                ) from exc
+            
         self._serial = ser
 
     def close(self) -> None:

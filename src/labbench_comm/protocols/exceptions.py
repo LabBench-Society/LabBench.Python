@@ -35,11 +35,15 @@ class InvalidSlaveResponseError(LabBenchError):
     """Raised when a slave response is invalid."""
     pass
 
+class PacketError(LabBenchError):
+    """Base class for all packet-related errors."""
 
-class PacketFormatError(LabBenchError):
+class PacketFormatError(PacketError):
     """Raised when a packet is malformed or cannot be parsed."""
     pass
 
+class ChecksumError(PacketError):
+    """Raised when packet checksum validation fails."""
 
 class PeripheralNotRespondingError(LabBenchError):
     """Raised when a peripheral fails to respond."""

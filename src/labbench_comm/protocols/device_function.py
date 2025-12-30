@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from labbench_comm.protocols.packet import Packet
-from labbench_comm.protocols.packet import PacketError
 
 
 # ----------------------------------------------------------------------

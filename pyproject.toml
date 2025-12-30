@@ -51,9 +51,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/labbench-comm"
-Repository = "https://github.com/your-org/labbench-comm"
-Issues = "https://github.com/your-org/labbench-comm/issues"
+Homepage = "https://labbench.io/"
+Repository = "https://github.com/LabBench-Society/LabBench.Python"
+Issues = "https://github.com/LabBench-Society/LabBench.Python/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

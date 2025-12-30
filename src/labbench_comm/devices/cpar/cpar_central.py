@@ -7,13 +7,6 @@ from labbench_comm.protocols.device import Device
 from labbench_comm.protocols.device_function import DeviceFunction
 from labbench_comm.protocols.functions.device_identification import DeviceIdentification
 from labbench_comm.protocols.functions.ping import Ping
-from labbench_comm.devices.cpar.functions import (
-    SetWaveformProgram,
-    StartStimulation,
-    StopStimulation,
-    SetOperatingMode,
-    ClearWaveformPrograms,
-)
 from labbench_comm.devices.cpar.messages import (
     StatusMessage,
     EventMessage,
@@ -27,56 +20,6 @@ from labbench_comm.protocols.manufacturer import Manufacturer
 
 
 class CPARplusCentral(Device):
-    # ------------------------------------------------------------------
-    # Device definitions & conversions
-    # ------------------------------------------------------------------
-
-    class PressureType(Enum):
-        SUPPLY_PRESSURE = 0
-        STIMULATING_PRESSURE = 1
-
-    MAX_SUPPLY_PRESSURE = 1000.0
-    MAX_SCORE = 10.0
-
-    @staticmethod
-    def time_to_rate(time: float) -> int:
-        return round(time * InstructionCodec.UPDATE_RATE)
-
-    @staticmethod
-    def binary_to_pressure(
-        value: int,
-        pressure_type: PressureType = PressureType.STIMULATING_PRESSURE,
-    ) -> float:
-        if pressure_type is CPARplusCentral.PressureType.SUPPLY_PRESSURE:
-            return CPARplusCentral.MAX_SUPPLY_PRESSURE * value / 4095
-        return InstructionCodec.MAX_PRESSURE * value / 4095
-
-    @staticmethod
-    def binary_to_score(value: int) -> float:
-        return CPARplusCentral.MAX_SCORE * value / 255
-
-    @staticmethod
-    def pressure_to_binary(pressure: float) -> float:
-        return InstructionCodec._pressure_to_binary(pressure)
-
-    @staticmethod
-    def delta_pressure_to_binary(delta: float) -> float:
-        return InstructionCodec._pressure_to_binary(
-            delta / InstructionCodec.UPDATE_RATE
-        )
-
-    @staticmethod
-    def count_to_time(count: int) -> float:
-        return count / InstructionCodec.UPDATE_RATE
-
-    @staticmethod
-    def time_to_count(time: float) -> int:
-        return int((time * InstructionCodec.UPDATE_RATE) + 0.9999)
-
-    @staticmethod
-    def get_time(samples: int) -> float:
-        return CPARplusCentral.count_to_time(samples)
-
     # ------------------------------------------------------------------
     # Construction
     # ------------------------------------------------------------------

@@ -8,7 +8,7 @@ from labbench_comm.devices.cpar.definitions import (
     StopCondition,
 )
 
-from labbench_comm.devices.cpar.cpar_central import CPARplusCentral
+from labbench_comm.devices.cpar.codec import CPARplusCodec
 
 
 class StatusMessage(DeviceMessage):
@@ -115,7 +115,7 @@ class StatusMessage(DeviceMessage):
 
     @property
     def vas_score(self) -> float:
-        return CPARplusCentral.binary_to_score(self.packet.get_byte(5))
+        return CPARplusCodec.binary_to_score(self.packet.get_byte(5))
 
     @property
     def vas_score_binary(self) -> int:
@@ -127,7 +127,7 @@ class StatusMessage(DeviceMessage):
 
     @property
     def final_vas_score(self) -> float:
-        return CPARplusCentral.binary_to_score(self.packet.get_byte(6))
+        return CPARplusCodec.binary_to_score(self.packet.get_byte(6))
 
     @property
     def final_vas_score_binary(self) -> int:
@@ -143,9 +143,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def supply_pressure(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.supply_pressure_binary,
-            CPARplusCentral.PressureType.SUPPLY_PRESSURE,
+            CPARplusCodec.PressureType.SUPPLY_PRESSURE,
         )
 
     @property
@@ -162,9 +162,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def actual_pressure_01(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.actual_pressure_01_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property
@@ -177,9 +177,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def actual_pressure_02(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.actual_pressure_02_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property
@@ -192,9 +192,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def target_pressure_01(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.target_pressure_01_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property
@@ -207,9 +207,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def target_pressure_02(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.target_pressure_02_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property
@@ -222,9 +222,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def final_pressure_01(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.final_pressure_01_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property
@@ -237,9 +237,9 @@ class StatusMessage(DeviceMessage):
 
     @property
     def final_pressure_02(self) -> float:
-        return CPARplusCentral.binary_to_pressure(
+        return CPARplusCodec.binary_to_pressure(
             self.final_pressure_02_binary,
-            CPARplusCentral.PressureType.STIMULATING_PRESSURE,
+            CPARplusCodec.PressureType.STIMULATING_PRESSURE,
         )
 
     @property

@@ -59,7 +59,7 @@ async def test_device_identification_hardware_windows():
     )
 
     connection = AsyncSerialConnection(serial_io)
-    bus = BusCentral(device=None, connection=connection)
+    bus = BusCentral(connection=connection)
 
     device = IdentificationOnlyDevice(bus)
     device.current_address = None  # set if your protocol requires addressing

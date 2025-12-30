@@ -65,6 +65,7 @@ where = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
 markers = [
+    "cpar: integration tests for the LabBench CPAR+ device",
     "hardware: tests that require real hardware",
     "unittest: unit tests of individual classes"
 ]

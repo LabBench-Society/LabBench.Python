@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from typing import Optional
 
 from labbench_comm.serial.base import SerialIO
@@ -23,7 +22,6 @@ class AsyncSerialConnection:
 
         self._reader_task: Optional[asyncio.Task] = None
         self._lock = asyncio.Lock()
-        self.log = logging.getLogger(__name__)
 
     # ------------------------------------------------------------------
     # Configuration
@@ -36,7 +34,6 @@ class AsyncSerialConnection:
         if self.is_open:
             raise RuntimeError("Cannot attach destuffer while connection is open")
 
-        self.log.debug("Logger attached")
         self._destuffer = destuffer
 
     # ------------------------------------------------------------------
@@ -57,7 +54,6 @@ class AsyncSerialConnection:
                 self._reader_loop(),
                 name="AsyncSerialConnection.reader",
             )
-            self.log.debug("Connection opened")
 
     async def close(self) -> None:
         async with self._lock:
@@ -74,7 +70,6 @@ class AsyncSerialConnection:
                     self._reader_task = None
 
             self._io.close()
-            self.log.debug("Connection closed")
 
     @property
     def is_open(self) -> bool:

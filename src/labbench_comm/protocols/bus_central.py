@@ -25,8 +25,8 @@ class BusCentral:
     - Enforce timeouts
     """
 
-    def __init__(self, device: Any, connection) -> None:
-        self._device = device
+    def __init__(self, connection) -> None:
+        self._device = None
         self._connection = connection
 
         self._destuffer = Destuffer()
@@ -43,6 +43,10 @@ class BusCentral:
 
         self._completion_event = asyncio.Event()
         self._lock = asyncio.Lock()
+
+    def attach_device(self, device) -> None:
+        self._device = device
+        self.message_listener = device
 
     # ------------------------------------------------------------------
     # Connection lifecycle

@@ -35,6 +35,7 @@ class Device(ABC):
         self.current_address: Optional[int] = None
         self._log = logging.getLogger(__name__)
 
+        central.attach_device(self)
         # Default debug message support
         self.central.add_message(PrintfMessage())
 
@@ -87,6 +88,7 @@ class Device(ABC):
     async def open(self) -> None:
         if not self.central.is_open:
             await self.central.open()
+            await asyncio.sleep(1.0)
 
     async def close(self) -> None:
         if self.central.is_open:

@@ -28,10 +28,16 @@ python -m pip install -e .[dev]
 
 Running tests
 
-Once the package is installed, run the test suite with:
+Once the package is installed, run the unit test suite with:
 
 ```
-python -m pytest
+python -m pytest -m "not hardware"
 ```
 
 Using `python -m pytest` ensures that tests are executed using the same Python environment into which the package was installed.
+
+Integration tests can be run with:
+
+```
+python -m pytest -m hardware -v
+```

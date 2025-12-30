@@ -87,17 +87,6 @@ class CPARplusCentral(Device):
         self.baudrate = 38400
         self.retries = 3
 
-        # --- ECP functions ---
-        self.add_function(DeviceIdentification())
-        self.add_function(Ping())
-
-        # --- CPAR+ functions ---
-        self.add_function(SetWaveformProgram())
-        self.add_function(StartStimulation())
-        self.add_function(StopStimulation())
-        self.add_function(SetOperatingMode())
-        self.add_function(ClearWaveformPrograms())
-
         # --- CPAR+ messages ---
         self.add_message(EventMessage())
         self.add_message(StatusMessage())
@@ -135,7 +124,7 @@ class CPARplusCentral(Device):
     # Message handlers
     # ------------------------------------------------------------------
 
-    def accept(self, message: StatusMessage) -> None:
+    def on_status_message(self, message: StatusMessage) -> None:
         if message is None:
             return
 
@@ -157,24 +146,24 @@ class CPARplusCentral(Device):
         for cb in self.status_received:
             cb(self, message)
 
-    def accept_event(self, msg: EventMessage) -> None:
-        if msg is None:
+    def on_event_message(self, message: EventMessage) -> None:
+        if message is None:
             return
 
         for cb in self.event_received:
-            cb(self, msg)
+            cb(self, message)
 
     # ------------------------------------------------------------------
     # Compatibility
     # ------------------------------------------------------------------
 
-    def is_compatible(self, identification: DeviceFunction) -> bool:
-        if not isinstance(identification, DeviceIdentification):
+    def is_compatible(self, function: DeviceFunction) -> bool:
+        if not isinstance(function, DeviceIdentification):
             return False
 
         return (
-            identification.manufacture_id == Manufacturer.InventorsWay
-            and identification.device_id == 4
+            function.manufacturer_id == Manufacturer.InventorsWay
+            and function.device_id == 4
         )
 
     # ------------------------------------------------------------------

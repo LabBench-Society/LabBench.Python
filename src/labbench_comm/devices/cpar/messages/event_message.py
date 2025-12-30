@@ -27,8 +27,9 @@ class EventMessage(DeviceMessage):
     def create_dispatcher(self) -> MessageDispatcher:
         return MessageDispatcher(self.code, lambda p: EventMessage(p))
 
-    def dispatch(self, listener):
-        return listener.accept(self)
+    def dispatch(self, listener) -> None:
+        if hasattr(listener, "on_event_message"):
+            listener.on_event_message(self)
 
     # ------------------------------------------------------------------
     # Properties

@@ -28,7 +28,8 @@ class PrintfMessage(DeviceMessage):
         return MessageDispatcher(self.CODE, lambda p: PrintfMessage(p))
 
     def dispatch(self, listener) -> None:
-        listener.accept(self)
+            if hasattr(listener, "on_printf_message"):
+                listener.on_printf_message(self)
 
     # ------------------------------------------------------------------
     # Message payload

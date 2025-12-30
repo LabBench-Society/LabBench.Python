@@ -50,15 +50,6 @@ class Device(ABC):
     # Function / message registration
     # ------------------------------------------------------------------
 
-    @property
-    def functions(self) -> List[DeviceFunction]:
-        return list(self._functions)
-
-    def add_function(self, function: DeviceFunction) -> None:
-        if function is None:
-            raise ValueError("function must not be None")
-        self._functions.append(function)
-
     def add_message(self, message: DeviceMessage) -> None:
         self.central.add_message(message)
 
@@ -73,7 +64,7 @@ class Device(ABC):
         Returns the ping counter, or -1 on failure.
         """
         try:
-            ping = self.create_ping()
+            ping = Ping()
             await self.execute(ping)
             return int(ping.count)
         except asyncio.CancelledError:
@@ -81,15 +72,9 @@ class Device(ABC):
         except Exception:
             return -1
 
-    def create_ping(self) -> DeviceFunction:
-        return Ping()
-
     # ------------------------------------------------------------------
     # Identification
     # ------------------------------------------------------------------
-
-    def create_identification_function(self) -> DeviceFunction:
-        return DeviceIdentification()
 
     @abstractmethod
     def is_compatible(self, function: DeviceFunction) -> bool:
@@ -144,11 +129,7 @@ class Device(ABC):
     # Message handlers
     # ------------------------------------------------------------------
 
-    def accept(self, message: PrintfMessage) -> None:
-        """
-        Default handler for PrintfMessage.
-        Subclasses may override.
-        """
+    def on_printf_message(self, message: PrintfMessage) -> None:
         self._log.debug(f"DEVICE PRINTF: {message.debug_message}")
 
     def get_error_string(self, error_code: int) -> str:

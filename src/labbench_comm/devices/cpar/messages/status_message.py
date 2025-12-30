@@ -33,8 +33,9 @@ class StatusMessage(DeviceMessage):
     def create_dispatcher(self) -> MessageDispatcher:
         return MessageDispatcher(self.code, lambda p: StatusMessage(p))
 
-    def dispatch(self, listener):
-        return listener.accept(self)
+    def dispatch(self, listener) -> None:
+        if hasattr(listener, "on_status_message"):
+            listener.on_status_message(self)
 
     # ------------------------------------------------------------------
     # 1. System State

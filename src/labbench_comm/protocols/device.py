@@ -17,24 +17,21 @@ class Device(ABC):
     """
     Base class for all devices.
 
-    A Device owns a BusMaster and defines:
+    A Device owns a BusCental and defines:
     - compatibility checks
     - retry policy
     - common functions (ping, identification)
     - message handling
     """
 
-    def __init__(self, bus: BusMaster) -> None:
-        self.central = bus
+    def __init__(self, central: BusCentral) -> None:
+        self.central = central
         self.central.message_listener = self
 
         self.retries: int = 1
         self.ping_enabled: bool = False
 
         self.current_address: Optional[int] = None
-
-        # Metadata only (not used by the framework directly)
-        self._functions: List[DeviceFunction] = []
 
         # Default debug message support
         self.central.add_message(PrintfMessage())

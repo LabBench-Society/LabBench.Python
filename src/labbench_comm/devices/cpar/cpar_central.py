@@ -1,0 +1,185 @@
+from __future__ import annotations
+
+from enum import Enum
+from typing import Optional
+
+from labbench_comm.protocols.device import Device
+from labbench_comm.protocols.device_function import DeviceFunction
+from labbench_comm.protocols.functions.device_identification import DeviceIdentification
+from labbench_comm.protocols.functions.ping import Ping
+from labbench_comm.devices.cpar.functions import (
+    SetWaveformProgram,
+    StartStimulation,
+    StopStimulation,
+    SetOperatingMode,
+    ClearWaveformPrograms,
+)
+from labbench_comm.devices.cpar.messages import (
+    StatusMessage,
+    EventMessage,
+)
+from labbench_comm.devices.cpar.definitions import (
+    DeviceState,
+    EcpError,
+)
+from labbench_comm.devices.cpar.instruction_codec import InstructionCodec
+from labbench_comm.protocols.manufacturer import Manufacturer
+
+
+class CPARplusCentral(Device):
+    # ------------------------------------------------------------------
+    # Device definitions & conversions
+    # ------------------------------------------------------------------
+
+    class PressureType(Enum):
+        SUPPLY_PRESSURE = 0
+        STIMULATING_PRESSURE = 1
+
+    MAX_SUPPLY_PRESSURE = 1000.0
+    MAX_SCORE = 10.0
+
+    @staticmethod
+    def time_to_rate(time: float) -> int:
+        return round(time * InstructionCodec.UPDATE_RATE)
+
+    @staticmethod
+    def binary_to_pressure(
+        value: int,
+        pressure_type: PressureType = PressureType.STIMULATING_PRESSURE,
+    ) -> float:
+        if pressure_type is CPARplusCentral.PressureType.SUPPLY_PRESSURE:
+            return CPARplusCentral.MAX_SUPPLY_PRESSURE * value / 4095
+        return InstructionCodec.MAX_PRESSURE * value / 4095
+
+    @staticmethod
+    def binary_to_score(value: int) -> float:
+        return CPARplusCentral.MAX_SCORE * value / 255
+
+    @staticmethod
+    def pressure_to_binary(pressure: float) -> float:
+        return InstructionCodec._pressure_to_binary(pressure)
+
+    @staticmethod
+    def delta_pressure_to_binary(delta: float) -> float:
+        return InstructionCodec._pressure_to_binary(
+            delta / InstructionCodec.UPDATE_RATE
+        )
+
+    @staticmethod
+    def count_to_time(count: int) -> float:
+        return count / InstructionCodec.UPDATE_RATE
+
+    @staticmethod
+    def time_to_count(time: float) -> int:
+        return int((time * InstructionCodec.UPDATE_RATE) + 0.9999)
+
+    @staticmethod
+    def get_time(samples: int) -> float:
+        return CPARplusCentral.count_to_time(samples)
+
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
+
+    def __init__(self, bus) -> None:
+        super().__init__(bus)
+
+        self.baudrate = 38400
+        self.retries = 3
+
+        # --- ECP functions ---
+        self.add_function(DeviceIdentification())
+        self.add_function(Ping())
+
+        # --- CPAR+ functions ---
+        self.add_function(SetWaveformProgram())
+        self.add_function(StartStimulation())
+        self.add_function(StopStimulation())
+        self.add_function(SetOperatingMode())
+        self.add_function(ClearWaveformPrograms())
+
+        # --- CPAR+ messages ---
+        self.add_message(EventMessage())
+        self.add_message(StatusMessage())
+
+        # --- Runtime state ---
+        self.state: Optional[DeviceState] = None
+
+        self.actual_pressure_01 = 0.0
+        self.target_pressure_01 = 0.0
+        self.final_pressure_01 = 0.0
+
+        self.actual_pressure_02 = 0.0
+        self.target_pressure_02 = 0.0
+        self.final_pressure_02 = 0.0
+
+        self.response_connected = False
+        self.vas_is_low = False
+        self.vas_score = 0.0
+        self.final_vas_score = 0.0
+
+        self.status_received = []
+        self.event_received = []
+
+    # ------------------------------------------------------------------
+    # Error handling
+    # ------------------------------------------------------------------
+
+    def get_peripheral_error_string(self, error_code: int) -> str:
+        try:
+            return str(EcpError(error_code))
+        except ValueError:
+            return f"Unknown CPAR error ({error_code})"
+
+    # ------------------------------------------------------------------
+    # Message handlers
+    # ------------------------------------------------------------------
+
+    def accept(self, message: StatusMessage) -> None:
+        if message is None:
+            return
+
+        self.actual_pressure_01 = message.actual_pressure_01
+        self.target_pressure_01 = message.target_pressure_01
+        self.final_pressure_01 = message.final_pressure_01
+
+        self.actual_pressure_02 = message.actual_pressure_02
+        self.target_pressure_02 = message.target_pressure_02
+        self.final_pressure_02 = message.final_pressure_02
+
+        self.response_connected = message.vas_connected
+        self.vas_is_low = message.vas_is_low
+        self.vas_score = message.vas_score
+        self.final_vas_score = message.final_vas_score
+
+        self.state = message.system_state
+
+        for cb in self.status_received:
+            cb(self, message)
+
+    def accept_event(self, msg: EventMessage) -> None:
+        if msg is None:
+            return
+
+        for cb in self.event_received:
+            cb(self, msg)
+
+    # ------------------------------------------------------------------
+    # Compatibility
+    # ------------------------------------------------------------------
+
+    def is_compatible(self, identification: DeviceFunction) -> bool:
+        if not isinstance(identification, DeviceIdentification):
+            return False
+
+        return (
+            identification.manufacture_id == Manufacturer.InventorsWay
+            and identification.device_id == 4
+        )
+
+    # ------------------------------------------------------------------
+    # Representation
+    # ------------------------------------------------------------------
+
+    def __str__(self) -> str:
+        return "CPAR+ Device"

@@ -12,8 +12,6 @@ class MessageDispatcher:
 
     Maps a message code to a factory function that creates a DeviceMessage
     instance from a received Packet.
-
-    Faithful Python port of LabBench.IO.MessageDispatcher.
     """
 
     def __init__(

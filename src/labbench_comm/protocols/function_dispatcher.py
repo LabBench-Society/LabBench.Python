@@ -12,8 +12,6 @@ class FunctionDispatcher:
 
     Maps a function code to a factory that creates a DeviceFunction
     instance and initializes it from a request packet.
-
-    Faithful Python port of LabBench.IO.FunctionDispatcher.
     """
 
     def __init__(

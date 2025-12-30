@@ -12,8 +12,6 @@ class DeviceMessage(ABC):
 
     A DeviceMessage represents a one-way message (no request/response pairing),
     typically used for notifications, events, or broadcast messages.
-
-    This is a faithful Python port of LabBench.IO.DeviceMessage.
     """
 
     def __init__(

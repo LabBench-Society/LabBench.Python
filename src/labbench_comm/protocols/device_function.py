@@ -30,9 +30,6 @@ class InvalidSlaveResponseError(DeviceFunctionError):
 class DeviceFunction(ABC):
     """
     Base class for a device function (command/response pair).
-
-    This is a faithful Python port of LabBench.IO.DeviceFunction,
-    adapted to use the Python Packet implementation.
     """
 
     def __init__(

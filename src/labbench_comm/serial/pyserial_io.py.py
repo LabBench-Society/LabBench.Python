@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 
 import serial
 from serial import SerialException
+import serial.tools.list_ports
 
 from labbench_comm.serial.base import SerialIO
 from labbench_comm.core.exceptions import (
@@ -16,10 +17,11 @@ from labbench_comm.core.exceptions import (
 
 class PySerialIO(SerialIO):
     """
-    Robust SerialIO implementation using pyserial.
+    SerialIO implementation backed by pyserial.
 
-    Non-blocking reads are controlled entirely through
-    pyserial's `in_waiting` buffer and timeout=0.
+    - Reads are strictly non-blocking (timeout=0)
+    - Write errors and partial writes are detected
+    - Safe under async cancellation and shutdown
     """
 
     def __init__(
@@ -31,10 +33,8 @@ class PySerialIO(SerialIO):
         bytesize: int = serial.EIGHTBITS,
         parity: str = serial.PARITY_NONE,
         stopbits: int = serial.STOPBITS_ONE,
+        flush_on_write: bool = False,
     ) -> None:
-        """
-        The read timeout is *not* used — read_nonblocking never blocks.
-        """
         self._port = port
         self._baudrate = baudrate
         self._write_timeout = write_timeout
@@ -42,21 +42,21 @@ class PySerialIO(SerialIO):
         self._bytesize = bytesize
         self._parity = parity
         self._stopbits = stopbits
+        self._flush_on_write = flush_on_write
 
         self._serial: Optional[serial.Serial] = None
 
     # -------------------- Lifecycle -------------------- #
 
     def open(self) -> None:
-        """Open the serial port (no-op if already open)."""
         if self.is_open:
             return
 
         try:
-            self._serial = serial.Serial(
+            ser = serial.Serial(
                 port=self._port,
                 baudrate=self._baudrate,
-                timeout=0.0,  # non-blocking reads
+                timeout=0.0,  # strictly non-blocking
                 write_timeout=self._write_timeout,
                 bytesize=self._bytesize,
                 parity=self._parity,
@@ -67,35 +67,45 @@ class PySerialIO(SerialIO):
                 f"Failed to open serial port {self._port}"
             ) from exc
 
-    def close(self) -> None:
-        """Close the port, freeing the handle."""
-        if self._serial is not None:
+        if not ser.is_open:
             try:
-                self._serial.close()
+                ser.close()
             finally:
-                self._serial = None
+                raise SerialConnectionError(
+                    f"Serial port {self._port} did not open correctly"
+                )
+
+        self._serial = ser
+
+    def close(self) -> None:
+        ser = self._serial
+        self._serial = None
+
+        if ser is not None:
+            try:
+                ser.close()
+            except SerialException:
+                pass
 
     @property
     def is_open(self) -> bool:
         return self._serial is not None and self._serial.is_open
 
     def _require_open(self) -> serial.Serial:
-        if not self.is_open or self._serial is None:
+        ser = self._serial
+        if ser is None or not ser.is_open:
             raise SerialClosedError("Serial port is not open")
-        return self._serial
+        return ser
 
     # -------------------- I/O -------------------- #
 
     def write_bytes(self, data: bytes) -> None:
-        """
-        Write raw bytes and flush.
-        Raises on short write or OS error.
-        """
         ser = self._require_open()
 
         try:
             written = ser.write(data)
-            ser.flush()
+            if self._flush_on_write:
+                ser.flush()
         except SerialException as exc:
             raise SerialConnectionError("Serial write failed") from exc
 
@@ -105,18 +115,14 @@ class PySerialIO(SerialIO):
             )
 
     def read_nonblocking(self, max_bytes: int) -> Tuple[int, bytes]:
-        """
-        Read up to max_bytes from the input buffer without blocking.
-        """
-
-        ser = self._require_open()
+        ser = self._serial
+        if ser is None or not ser.is_open:
+            return 0, b""
 
         try:
             available = ser.in_waiting
-        except SerialException as exc:
-            raise SerialConnectionError(
-                "Failed to query serial input buffer"
-            ) from exc
+        except SerialException:
+            return 0, b""
 
         if available <= 0:
             return 0, b""
@@ -129,3 +135,16 @@ class PySerialIO(SerialIO):
             raise SerialConnectionError("Non-blocking read failed") from exc
 
         return len(data), data
+
+    # -------------------- Utilities -------------------- #
+
+    @staticmethod
+    def list_ports() -> list[str]:
+        return [p.device for p in serial.tools.list_ports.comports()]
+
+    def __repr__(self) -> str:
+        state = "open" if self.is_open else "closed"
+        return (
+            f"<PySerialIO port={self._port!r} "
+            f"baudrate={self._baudrate} state={state}>"
+        )

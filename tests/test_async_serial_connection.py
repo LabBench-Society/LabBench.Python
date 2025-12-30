@@ -5,6 +5,7 @@ from labbench_comm.protocols.destuffer import Destuffer
 from labbench_comm.protocols.frame import Frame
 from labbench_comm.serial.async_serial_connection import AsyncSerialConnection
 
+
 class FakeSerialIO:
     def __init__(self):
         self._open = False
@@ -36,6 +37,7 @@ class FakeSerialIO:
     def inject_rx(self, data: bytes):
         self._rx.extend(data)
 
+
 @pytest.mark.asyncio
 async def test_async_serial_connection_reads():
     serial = FakeSerialIO()
@@ -58,13 +60,16 @@ async def test_async_serial_connection_reads():
 
     await conn.close()
 
+
 @pytest.mark.asyncio
 async def test_reader_cancellation():
     serial = FakeSerialIO()
     conn = AsyncSerialConnection(serial)
 
+    # ✅ Attach a minimal destuffer to satisfy invariants
+    conn.attach_destuffer(Destuffer())
+
     await conn.open()
     await conn.close()
 
     assert not conn.is_open
-

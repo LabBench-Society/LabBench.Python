@@ -3,14 +3,14 @@ import time
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
-from labbench_comm.bus.bus_master import BusMaster
+from labbench_comm.protocols.bus_central import BusCentral
 from labbench_comm.protocols.device_function import DeviceFunction
 from labbench_comm.protocols.device_message import DeviceMessage
 from labbench_comm.protocols.functions.device_identification import DeviceIdentification
 from labbench_comm.protocols.functions.ping import Ping
 from labbench_comm.protocols.error_codes import ErrorCode
 from labbench_comm.protocols.exceptions import IncompatibleDeviceError
-from labbench_comm.protocols.messages import PrintfMessage
+from labbench_comm.protocols.messages.printf_message import PrintfMessage
 
 
 class Device(ABC):

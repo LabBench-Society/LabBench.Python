@@ -21,7 +21,7 @@ python -m pip install -e .[dev]
 This installs `labbench-comm` in editable mode and with development dependencies, so any changes you make to the source code are immediately reflected without reinstalling.
 
 
-#### Running tests
+### Running tests
 
 Once the package is installed, run the unit test suite with:
 

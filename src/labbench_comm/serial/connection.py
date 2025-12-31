@@ -35,7 +35,7 @@ class PySerialIO(SerialIO):
         parity: str = serial.PARITY_NONE,
         stopbits: int = serial.STOPBITS_ONE,
         flush_on_write: bool = True,        
-        dtr: bool = False,
+        dtr: bool = True,
     ) -> None:
         self._port = port
         self._baudrate = baudrate
@@ -65,6 +65,7 @@ class PySerialIO(SerialIO):
                 bytesize=self._bytesize,
                 parity=self._parity,
                 stopbits=self._stopbits,
+                dsrdtr=self._dtr
             )
         except SerialException as exc:
             raise SerialConnectionError(
@@ -80,13 +81,13 @@ class PySerialIO(SerialIO):
                 )
 
         # Explicit DTR control
-        try:
-            ser.dtr = self._dtr
-        except SerialException as exc:
-            ser.close()
-            raise SerialConnectionError(
-                "Failed to set DTR"
-            ) from exc
+        #try:
+        #    ser.dtr = self._dtr
+        #except SerialException as exc:
+        #    ser.close()
+        #    raise SerialConnectionError(
+        #        "Failed to set DTR"
+        #    ) from exc
             
         self._serial = ser
 

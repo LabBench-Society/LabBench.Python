@@ -88,7 +88,6 @@ class Device(ABC):
     async def open(self) -> None:
         if not self.central.is_open:
             await self.central.open()
-            await asyncio.sleep(1.0)
 
     async def close(self) -> None:
         if self.central.is_open:

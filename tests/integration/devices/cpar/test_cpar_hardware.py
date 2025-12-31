@@ -37,8 +37,7 @@ async def test_cpar_device_identification():
 
     serial_io = PySerialIO(
         port=port,
-        baudrate=baudrate,
-        dtr=False
+        baudrate=baudrate
     )
 
     connection = AsyncSerialConnection(serial_io)

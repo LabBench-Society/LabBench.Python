@@ -4,6 +4,7 @@ import serial.tools.list_ports
 from labbench_comm.serial.connection import PySerialIO
 from labbench_comm.serial.async_serial_connection import AsyncSerialConnection
 from labbench_comm.protocols.bus_central import BusCentral
+from labbench_comm.protocols.exceptions import FunctionNotAcknowledgedError
 import labbench_comm.devices.cpar as cpar
 
 def get_first_serial_port() -> str:
@@ -34,7 +35,7 @@ async def main() -> None:
 
         print("Clearing waveforms")
         await device.execute(cpar.ClearWaveformPrograms())
-        
+
         print("Setting pressure waveform")
         
         waveformFunction = cpar.SetWaveformProgram()
@@ -42,9 +43,12 @@ async def main() -> None:
             cpar.WaveformInstruction.step(50,1),
             cpar.WaveformInstruction.step(0, 1)
         ]
-        waveformFunction.repeat = 10
+        waveformFunction.repeat = 3
         waveformFunction.channel = 0
         await device.execute(waveformFunction)
+
+        print("Start pinging")
+        await device.start_ping()
 
         print("Starting waveform")
         startFunction = cpar.StartStimulation()
@@ -54,8 +58,10 @@ async def main() -> None:
         startFunction.outlet02 = cpar.DeviceChannelID.NONE
         await device.execute(startFunction)
 
-        print("Stopping stimulation")
-        await device.execute(cpar.StopStimulation())
+        print("Wait for stimulation to complete")
+        await device.wait_for_stimulation_complete(0.5)
+
+        print("Stimulation complete")
 
     finally:
         await device.close()

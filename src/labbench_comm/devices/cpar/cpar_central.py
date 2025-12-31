@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from enum import Enum
 from typing import Optional
 
@@ -53,6 +56,15 @@ class CPARplusCentral(Device):
         self.status_received = []
         self.event_received = []
 
+        self._ping_task: asyncio.Task | None = None
+        self._ping_stop_event = asyncio.Event()
+        self._ping_interval: float = 1.0
+
+        self._entered_stimulating = asyncio.Event()
+        self._left_stimulating = asyncio.Event()
+
+        self._logger = logging.getLogger(__name__)
+
     # ------------------------------------------------------------------
     # Error handling
     # ------------------------------------------------------------------
@@ -84,7 +96,22 @@ class CPARplusCentral(Device):
         self.vas_score = message.vas_score
         self.final_vas_score = message.final_vas_score
 
+        previous_state = self.state
         self.state = message.system_state
+
+        # --- state transition tracking ---
+        if (
+            previous_state != DeviceState.STATE_STIMULATING
+            and self.state == DeviceState.STATE_STIMULATING
+        ):
+            self._entered_stimulating.set()
+            self._left_stimulating.clear()
+
+        elif (
+            previous_state == DeviceState.STATE_STIMULATING
+            and self.state != DeviceState.STATE_STIMULATING
+        ):
+            self._left_stimulating.set()
 
         for cb in self.status_received:
             cb(self, message)
@@ -95,6 +122,92 @@ class CPARplusCentral(Device):
 
         for cb in self.event_received:
             cb(self, message)
+
+
+    async def wait_for_stimulation_complete(self, enter_timeout: float) -> None:
+        """
+        Wait until the device enters STATE_STIMULATING and then leaves it.
+
+        :param enter_timeout: seconds to wait for stimulation to start
+        :raises StimulationTimeoutError: if stimulation does not start in time
+        """
+
+        # Reset state before waiting
+        self._entered_stimulating.clear()
+        self._left_stimulating.clear()
+
+        # If already stimulating, treat as entered
+        if self.state == DeviceState.STATE_STIMULATING:
+            self._entered_stimulating.set()
+
+        # --- wait for entry ---
+        try:
+            await asyncio.wait_for(
+                self._entered_stimulating.wait(),
+                timeout=enter_timeout,
+            )
+        except asyncio.TimeoutError as exc:
+            raise RuntimeError(
+                "Device did not enter STATE_STIMULATING in time"
+            ) from exc
+
+        # --- wait for exit ---
+        await self._left_stimulating.wait()
+
+    # ------------------------------------------------------------------
+    # Deadmans switch for stimulation
+    # ------------------------------------------------------------------
+    async def start_ping(self, interval: float = 1.0) -> None:
+        """
+        Start background ping task.
+
+        Calling this multiple times is safe.
+        """
+        if self._ping_task and not self._ping_task.done():
+            return  # already running
+
+        self._ping_interval = interval
+        self._ping_stop_event.clear()
+
+        self._ping_task = asyncio.create_task(
+            self._ping_loop(),
+            name="CPARplusCentral.ping_loop",
+        )
+
+    async def stop_ping(self) -> None:
+        """
+        Stop background ping task.
+        """
+        if not self._ping_task:
+            return
+
+        self._ping_stop_event.set()
+        self._ping_task.cancel()
+
+        try:
+            await self._ping_task
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._ping_task = None
+
+    async def _ping_loop(self) -> None:
+        try:
+            while not self._ping_stop_event.is_set():
+                try:
+                    await self.ping()
+                except Exception as exc:
+                    self._logger.warning("Background ping failed: %s", exc)
+
+                try:
+                    await asyncio.wait_for(
+                        self._ping_stop_event.wait(),
+                        timeout=self._ping_interval,
+                    )
+                except asyncio.TimeoutError:
+                    continue
+        except asyncio.CancelledError:
+            pass
 
     # ------------------------------------------------------------------
     # Compatibility

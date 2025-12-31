@@ -15,29 +15,27 @@ it means the package has not yet been installed into your current Python environ
 From the project root (the directory containing `pyproject.toml`), run:
 
 ```bash
-python -m pip install -e .
-```
-
-This installs `labbench-comm` in editable mode, so any changes you make to the source code are immediately reflected without reinstalling.
-
-To install development dependencies (such as pytest) at the same time, run:
-
-```bash
 python -m pip install -e .[dev]
 ```
 
-Running tests
+This installs `labbench-comm` in editable mode and with development dependencies, so any changes you make to the source code are immediately reflected without reinstalling.
+
+
+#### Running tests
 
 Once the package is installed, run the unit test suite with:
 
 ```
-python -m pytest -m unittest -v
+python -m pytest -m [testtype] -v
 ```
 
 Using `python -m pytest` ensures that tests are executed using the same Python environment into which the package was installed.
 
-Integration tests can be run with:
+Test type defines the test suite being run:
 
-```
-python -m pytest -m hardware -v
-```
+| testtype | Description |
+|----------|-------------|
+| unittest | |
+| cpar     | |
+
+## Building the package

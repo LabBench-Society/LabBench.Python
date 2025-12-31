@@ -39,3 +39,33 @@ Test type defines the test suite being run:
 | cpar     | |
 
 ## Building the package
+
+### Prerequisites (one-time)
+
+Prerequisites (one-time)
+
+```
+python -m pip install --upgrade build setuptools wheel
+```
+
+### Building the package
+
+```
+python -m build
+```
+
+### Verify the package content (optional but recommended)
+
+You can inspect the wheel:
+
+```
+python -m zipfile -l dist/labbench_comm-0.1.0-py3-none-any.whl
+```
+
+Check the following:
+
+* labbench_comm/devices/... is included
+* labbench_comm/protocols, serial, utils are included
+* No tests/ inside the wheel
+
+

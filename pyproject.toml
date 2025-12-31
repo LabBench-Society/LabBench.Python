@@ -31,6 +31,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[project.scripts]
+labbench-comm = "labbench_comm.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",

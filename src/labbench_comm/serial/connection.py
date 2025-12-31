@@ -9,7 +9,7 @@ import serial.tools.list_ports
 import logging
 
 from labbench_comm.serial.base import SerialIO
-from labbench_comm.core.exceptions import (
+from labbench_comm.protocols.exceptions import (
     SerialError,
     SerialClosedError,
     SerialConnectionError,

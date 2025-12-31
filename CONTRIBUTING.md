@@ -1,3 +1,38 @@
+# Contributing to labbench-comm
+
+First of all: **thank you for contributing** to *labbench-comm*.  
+This project exists to make reliable, testable, and well-structured communication with LabBench hardware possible in Python, and contributions are very welcome.
+
+This document explains **how to contribute safely and effectively**, following best practices for open-source Python projects.
+
+---
+
+## Code of Conduct
+
+By participating in this project, you agree to act professionally and respectfully.
+
+- Be constructive and respectful
+- Assume good intent
+- Focus on technical merit
+- No harassment, discrimination, or personal attacks
+
+If problems arise, please contact the maintainers via GitHub Issues.
+
+---
+
+## Project Philosophy
+
+Before contributing, it helps to understand the guiding principles:
+
+- **Async-first**: all I/O must be non-blocking and asyncio-compatible
+- **Protocol correctness over convenience**
+- **Explicit over implicit** (clear state machines, no magic)
+- **Testability is mandatory**
+- **Hardware tests are optional but encouraged**
+- **No circular dependencies**
+- **Pythonic, but deterministic**
+
+---
 
 
 ## Development setup
@@ -47,6 +82,8 @@ Prerequisites (one-time)
 ```
 python -m pip install --upgrade build setuptools wheel
 ```
+
+
 
 ### Building the package
 

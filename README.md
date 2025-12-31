@@ -33,7 +33,7 @@ Additional devices can be added by implementing new `Device`, `DeviceFunction`, 
 
 ## Requirements
 
-- Python **3.9+**
+- Python **3.12+**
 - Supported platforms: Windows, Linux, macOS (serial access required)
 
 ---

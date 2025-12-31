@@ -59,7 +59,7 @@ python -m build
 You can inspect the wheel:
 
 ```
-python -m zipfile -l dist/labbench_comm-0.1.0-py3-none-any.whl
+python -m zipfile -l dist/labbench_comm-[VERSION NUMBER]-py3-none-any.whl
 ```
 
 Check the following:

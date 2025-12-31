@@ -34,7 +34,6 @@ Before contributing, it helps to understand the guiding principles:
 
 ---
 
-
 ## Development setup
 
 This project uses a modern **`src/` layout**, which means the package must be installed before it can be imported (including by tests).

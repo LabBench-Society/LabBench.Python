@@ -59,7 +59,7 @@ async def main() -> None:
         await device.execute(startFunction)
 
         print("Wait for stimulation to complete")
-        await device.wait_for_stimulation_complete(0.5)
+        data = await device.wait_for_stimulation_complete(0.5)
 
         print("Stimulation complete")
 

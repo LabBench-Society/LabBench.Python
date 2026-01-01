@@ -44,7 +44,7 @@ async def main() -> None:
             cpar.WaveformInstruction.step(50,1),
             cpar.WaveformInstruction.step(0, 1)
         ]
-        waveformFunction.repeat = 3
+        waveformFunction.repeat = 10
         waveformFunction.channel = 0
         await device.execute(waveformFunction)
 
@@ -53,7 +53,7 @@ async def main() -> None:
 
         print("Starting waveform")
         startFunction = cpar.StartStimulation()
-        startFunction.criterion = cpar.StopCriterion.STOP_CRITERION_ON_BUTTON_VAS
+        startFunction.criterion = cpar.StopCriterion.STOP_CRITERION_ON_BUTTON_PRESSED
         startFunction.external_trigger = False
         startFunction.outlet01 = cpar.DeviceChannelID.CH01
         startFunction.outlet02 = cpar.DeviceChannelID.NONE
@@ -63,6 +63,7 @@ async def main() -> None:
         data = await device.wait_for_stimulation_complete(0.5)
 
         print("Stimulation complete")
+        await device.stop_ping()
 
         plot_stimulation_data(data, "Temporal Summation")
 

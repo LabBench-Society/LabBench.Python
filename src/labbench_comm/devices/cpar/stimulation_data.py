@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-from labbench_comm.devices.cpar.instruction_codec import InstructionCodec
 
 
 @dataclass(slots=True)
@@ -41,7 +40,7 @@ class StimulationData:
         Time axis in seconds for each sample, derived from sample index
         using the protocol update rate.
         """
-        dt = 1.0 / InstructionCodec.UPDATE_RATE
+        dt = 1.0 / 20
         return [i * dt for i in range(len(self.samples))]
         
    # ------------------------------------------------------------------

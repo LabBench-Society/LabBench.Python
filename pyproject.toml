@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "labbench_comm"
-version = "0.1.1"
+version = "0.1.2"
 description = "Communication with LabBench devices"
 readme = "README.md"
 license = { file = "LICENSE" }

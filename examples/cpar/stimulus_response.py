@@ -35,7 +35,6 @@ async def main() -> None:
     device.status_received.append(print_status)
 
     try:
-
         # ---- Open connection ----
         print("Opening device")
         await device.open()
@@ -50,10 +49,9 @@ async def main() -> None:
         
         waveformFunction = cpar.SetWaveformProgram()
         waveformFunction.instructions = [
-            cpar.WaveformInstruction.step(50,1),
-            cpar.WaveformInstruction.step(0, 1)
+            cpar.WaveformInstruction.increment(1, 100)
         ]
-        waveformFunction.repeat = 10
+        waveformFunction.repeat = 1
         waveformFunction.channel = 0
         await device.execute(waveformFunction)
 
@@ -62,7 +60,7 @@ async def main() -> None:
 
         print("Starting waveform")
         startFunction = cpar.StartStimulation()
-        startFunction.criterion = cpar.StopCriterion.STOP_CRITERION_ON_BUTTON_PRESSED
+        startFunction.criterion = cpar.StopCriterion.STOP_CRITERION_ON_BUTTON_VAS
         startFunction.external_trigger = False
         startFunction.outlet01 = cpar.DeviceChannelID.CH01
         startFunction.outlet02 = cpar.DeviceChannelID.NONE

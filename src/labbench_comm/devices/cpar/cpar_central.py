@@ -76,7 +76,7 @@ class CPARplusCentral(Device):
 
     def get_peripheral_error_string(self, error_code: int) -> str:
         try:
-            return str(EcpError(error_code))
+            return str(EcpError(error_code).name)
         except ValueError:
             return f"Unknown CPAR error ({error_code})"
 

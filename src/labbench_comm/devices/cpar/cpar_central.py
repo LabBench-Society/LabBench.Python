@@ -18,6 +18,10 @@ from labbench_comm.devices.cpar.definitions import (
     DeviceState,
     EcpError,
 )
+from labbench_comm.devices.cpar.stimulation_data import (
+    StimulationSample,
+    StimulationData
+)
 from labbench_comm.devices.cpar.instruction_codec import InstructionCodec
 from labbench_comm.protocols.manufacturer import Manufacturer
 
@@ -62,6 +66,7 @@ class CPARplusCentral(Device):
 
         self._entered_stimulating = asyncio.Event()
         self._left_stimulating = asyncio.Event()
+        self._current_stimulation_data: StimulationData | None = None
 
         self._logger = logging.getLogger(__name__)
 
@@ -106,12 +111,31 @@ class CPARplusCentral(Device):
         ):
             self._entered_stimulating.set()
             self._left_stimulating.clear()
-
+            self._current_stimulation_data = StimulationData()
         elif (
             previous_state == DeviceState.STATE_STIMULATING
             and self.state != DeviceState.STATE_STIMULATING
         ):
             self._left_stimulating.set()
+
+        # -----------------------------
+        # Collect samples
+        # -----------------------------
+        if (
+            self.state == DeviceState.STATE_STIMULATING
+            and self._current_stimulation_data
+        ):
+            sample = StimulationSample(
+                actual_pressure_01=message.actual_pressure_01,
+                target_pressure_01=message.target_pressure_01,
+                final_pressure_01=message.final_pressure_01,
+                actual_pressure_02=message.actual_pressure_02,
+                target_pressure_02=message.target_pressure_02,
+                final_pressure_02=message.final_pressure_02,
+                vas_score=message.vas_score,
+                final_vas_score=message.final_vas_score,
+            )
+            self._current_stimulation_data.add_sample(sample)            
 
         for cb in self.status_received:
             cb(self, message)
@@ -124,7 +148,7 @@ class CPARplusCentral(Device):
             cb(self, message)
 
 
-    async def wait_for_stimulation_complete(self, enter_timeout: float) -> None:
+    async def wait_for_stimulation_complete(self, enter_timeout: float) -> StimulationData:
         """
         Wait until the device enters STATE_STIMULATING and then leaves it.
 
@@ -153,6 +177,9 @@ class CPARplusCentral(Device):
 
         # --- wait for exit ---
         await self._left_stimulating.wait()
+
+        assert self._current_stimulation_data is not None
+        return self._current_stimulation_data
 
     # ------------------------------------------------------------------
     # Deadmans switch for stimulation

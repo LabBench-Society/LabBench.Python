@@ -5,6 +5,7 @@ from labbench_comm.serial.connection import PySerialIO
 from labbench_comm.serial.async_serial_connection import AsyncSerialConnection
 from labbench_comm.protocols.bus_central import BusCentral
 from labbench_comm.protocols.exceptions import FunctionNotAcknowledgedError
+from plotting import plot_stimulation_data
 import labbench_comm.devices.cpar as cpar
 
 def get_first_serial_port() -> str:
@@ -62,6 +63,8 @@ async def main() -> None:
         data = await device.wait_for_stimulation_complete(0.5)
 
         print("Stimulation complete")
+
+        plot_stimulation_data(data, "Temporal Summation")
 
     finally:
         await device.close()

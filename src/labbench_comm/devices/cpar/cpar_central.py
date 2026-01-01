@@ -112,6 +112,7 @@ class CPARplusCentral(Device):
             self._entered_stimulating.set()
             self._left_stimulating.clear()
             self._current_stimulation_data = StimulationData()
+            self._log.debug("Entered stimulation state, start recording data")
         elif (
             previous_state == DeviceState.STATE_STIMULATING
             and self.state != DeviceState.STATE_STIMULATING
@@ -121,21 +122,18 @@ class CPARplusCentral(Device):
         # -----------------------------
         # Collect samples
         # -----------------------------
-        if (
-            self.state == DeviceState.STATE_STIMULATING
-            and self._current_stimulation_data
-        ):
-            sample = StimulationSample(
-                actual_pressure_01=message.actual_pressure_01,
-                target_pressure_01=message.target_pressure_01,
-                final_pressure_01=message.final_pressure_01,
-                actual_pressure_02=message.actual_pressure_02,
-                target_pressure_02=message.target_pressure_02,
-                final_pressure_02=message.final_pressure_02,
-                vas_score=message.vas_score,
-                final_vas_score=message.final_vas_score,
-            )
-            self._current_stimulation_data.add_sample(sample)            
+        if (self.state == DeviceState.STATE_STIMULATING):
+            if (self._current_stimulation_data is not None):
+                self._current_stimulation_data.add_sample(StimulationSample(
+                    actual_pressure_01=message.actual_pressure_01,
+                    target_pressure_01=message.target_pressure_01,
+                    final_pressure_01=message.final_pressure_01,
+                    actual_pressure_02=message.actual_pressure_02,
+                    target_pressure_02=message.target_pressure_02,
+                    final_pressure_02=message.final_pressure_02,
+                    vas_score=message.vas_score,
+                    final_vas_score=message.final_vas_score,
+                ))  
 
         for cb in self.status_received:
             cb(self, message)

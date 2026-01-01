@@ -50,16 +50,17 @@ def plot_stimulation_data(
     ax_pressure.plot(
         time,
         data.actual_pressure_01,
-        label="Pressure (1)",
-        linewidth=2,
+        label="Pressure (1)",  
+        color="k",      
+        linewidth=1,
     )
 
     ax_pressure.plot(
         time,
         data.actual_pressure_02,
         label="Pressure (2)",
-        linestyle="--",
-        linewidth=2,
+        color="b",
+        linewidth=1,
     )
 
     ax_pressure.set_ylabel("Pressure [kPa]")
@@ -75,7 +76,8 @@ def plot_stimulation_data(
         time,
         data.vas_scores,
         label="Rating",
-        linewidth=2,
+        color="k",
+        linewidth=1,
     )
 
     ax_vas.set_xlabel("Time [s]")

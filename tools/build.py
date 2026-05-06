@@ -6,8 +6,6 @@ This script:
 - Cleans all build artifacts
 - Builds source and wheel distributions
 - Runs tests
-- Runs Ruff (linting)
-- Runs MyPy (type checking)
 - Verifies the built package with Twine
 
 Works on Windows, Linux, and macOS.

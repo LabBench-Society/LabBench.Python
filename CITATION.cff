@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use labbench-comm in research, please cite the project repository."
+title: "labbench-comm"
+authors:
+  - name: "Kristian Hennings"
+repository-code: "https://github.com/LabBench-Society/LabBench.Python"
+url: "https://labbench.io/"
+license: "MIT"

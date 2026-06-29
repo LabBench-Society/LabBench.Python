@@ -402,6 +402,47 @@ def test_set_voltage_and_waveform_dynamic_packets():
 
 
 @pytest.mark.unittest
+def test_set_waveform_rejects_more_than_firmware_sample_limit():
+    waveform = SetWaveform()
+    waveform.rate = UpdateRate.CLK1000Hz
+    waveform.samples = [0.0] * 1001
+
+    with pytest.raises(ValueError, match="1000"):
+        waveform.on_send()
+
+
+@pytest.mark.unittest
+def test_set_waveform_encodes_firmware_sample_limit():
+    waveform = SetWaveform()
+    waveform.rate = UpdateRate.CLK1000Hz
+    waveform.repeat = 3
+    waveform.offset = 2.0
+    waveform.period = 0.0
+    waveform.samples = [-1.0, *([0.0] * 998), 1.0]
+    waveform.on_send()
+
+    assert waveform.request.length == 2006
+    assert waveform.request.checksum_algorithm is ChecksumAlgorithmType.CRC8CCITT
+    assert waveform.request.get_uint16(0) == 3
+    assert waveform.request.get_uint16(2) == 2
+    assert waveform.request.get_uint16(4) == 0
+    assert waveform.request.get_int16(6) == -4095
+    assert waveform.request.get_int16(2004) == 4095
+
+
+@pytest.mark.unittest
+def test_set_waveform_rejects_period_shorter_than_encoded_samples():
+    waveform = SetWaveform()
+    waveform.rate = UpdateRate.CLK1000Hz
+    waveform.offset = 2.0
+    waveform.period = 1001.0
+    waveform.samples = [0.0] * 1000
+
+    with pytest.raises(ValueError, match="period"):
+        waveform.on_send()
+
+
+@pytest.mark.unittest
 def test_lio_messages_decode_and_validate_lengths():
     status_packet = Packet(0x80, 7)
     status_packet.insert_byte(0, 0)

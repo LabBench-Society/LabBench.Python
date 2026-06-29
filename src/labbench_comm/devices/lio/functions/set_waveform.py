@@ -6,7 +6,7 @@ from labbench_comm.devices.lio.functions.base import _LIOFunction
 
 class SetWaveform(_LIOFunction):
     MAX_VALUE = 4095
-    MAXIMUM_NUMBER_OF_INSTRUCTIONS = 1024
+    MAXIMUM_SAMPLE_COUNT = 1000
 
     @property
     def code(self) -> int:
@@ -33,15 +33,20 @@ class SetWaveform(_LIOFunction):
         return self.rate.milliseconds_to_samples(self.offset)
 
     def on_send(self) -> None:
-        sample_count = min(len(self.samples), self.MAXIMUM_NUMBER_OF_INSTRUCTIONS)
+        sample_count = len(self.samples)
         offset = self.offset_in_samples
         period = self.period_in_samples
 
+        if sample_count > self.MAXIMUM_SAMPLE_COUNT:
+            raise ValueError(
+                f"Waveform cannot exceed the firmware limit of "
+                f"{self.MAXIMUM_SAMPLE_COUNT} samples"
+            )
         if period > UINT16_MAX:
             raise ValueError("Period cannot exceed UInt16 samples")
         if offset > UINT16_MAX:
             raise ValueError("Offset cannot exceed UInt16 samples")
-        if period > 0 and offset + len(self.samples) > period:
+        if period > 0 and offset + sample_count > period:
             raise ValueError(
                 "The period of a Stimulus Waveform must be longer than its "
                 "offset and waveform duration."

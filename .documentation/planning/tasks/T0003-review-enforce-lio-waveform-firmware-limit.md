@@ -2,7 +2,7 @@
 
 - **ID:** `T0003`
 - **Title:** `Enforce the LIO waveform firmware sample limit`
-- **Status:** `Ready`
+- **Status:** `Review`
 - **Type:** `Bug`
 - **Related Work:** `.documentation/documentation/lio/interface-design-description.md`
 
@@ -53,23 +53,23 @@ Correct `SetWaveform` so it respects the firmware limit of `1000` samples docume
 
 ## Acceptance Criteria
 
-- [ ] `SetWaveform` uses `1000` as its maximum sample count for packet construction.
-- [ ] A waveform with exactly `1000` samples can be encoded and produces a packet length of `2006`.
-- [ ] A waveform with `1001` samples does not produce an over-limit request packet; the preferred behavior is a clear `ValueError`.
-- [ ] Existing waveform fields still encode correctly: repeat at offset `0`, offset at `2`, period at `4`, and samples starting at `6`.
-- [ ] Existing sample scaling and period-shorter-than-waveform validation behavior is preserved or made stricter only where needed to prevent firmware-rejected packets.
+- [x] `SetWaveform` uses `1000` as its maximum sample count for packet construction.
+- [x] A waveform with exactly `1000` samples can be encoded and produces a packet length of `2006`.
+- [x] A waveform with `1001` samples does not produce an over-limit request packet; the preferred behavior is a clear `ValueError`.
+- [x] Existing waveform fields still encode correctly: repeat at offset `0`, offset at `2`, period at `4`, and samples starting at `6`.
+- [x] Existing sample scaling and period-shorter-than-waveform validation behavior is preserved or made stricter only where needed to prevent firmware-rejected packets.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass.
-- [ ] The implementation follows existing repository patterns and keeps the change scoped to this issue.
-- [ ] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
-- [ ] Relevant manual validation is completed and documented in this issue.
-- [ ] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
-- [ ] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
-- [ ] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
-- [ ] No unrelated files, generated artifacts, or user changes are reverted or modified.
-- [ ] Any follow-up work is explicitly listed with rationale.
+- [x] All acceptance criteria pass.
+- [x] The implementation follows existing repository patterns and keeps the change scoped to this issue.
+- [x] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
+- [x] Relevant manual validation is completed and documented in this issue.
+- [x] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
+- [x] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
+- [x] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
+- [x] No unrelated files, generated artifacts, or user changes are reverted or modified.
+- [x] Any follow-up work is explicitly listed with rationale.
 
 ## Implementation Notes
 
@@ -93,4 +93,16 @@ Correct `SetWaveform` so it respects the firmware limit of `1000` samples docume
 
 ## Implementation Agent Notes
 
-None
+- Implemented by raising `ValueError` before packet construction when `len(samples) > 1000`; this prevents silently changing caller-provided waveforms and prevents firmware-rejected packets.
+- Added boundary tests for `1000` samples, `1001` samples, and a non-zero period shorter than `offset + sample_count`; kept the existing small waveform packet/scaling regression.
+- Manual inspection confirmed `SetWaveform.MAXIMUM_SAMPLE_COUNT = 1000`, request length uses `(sample_count + 3) * 2`, and `period` validation uses `offset + sample_count`.
+- `rg -n "1024|MaximumNumberOfInstructions|MAXIMUM_NUMBER_OF_INSTRUCTIONS|SetWaveform|SET_WAVEFORM|waveform" README.md .documentation src tests`: no stale user-facing `1024` waveform limit found outside the task context; IDD already documents `1000`.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k "more_than_firmware_sample_limit"` initially failed as expected before implementation because `ValueError` was not raised.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k "more_than_firmware_sample_limit"`: passed, 1 selected test.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k "waveform"`: passed, 4 selected tests, with one pytest cache warning.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py`: passed, 33 tests, with one pytest cache warning.
+- `pytest -m unittest`: passed, 78 selected tests and 2 deselected, with one pytest cache warning.
+- `python -m build`: first failed in the sandbox because isolated build dependency installation could not reach PyPI; rerun with approved network escalation passed and built `labbench_comm-0.1.2.tar.gz` and `labbench_comm-0.1.2-py3-none-any.whl`.
+- No lint, type-check, or formatter command is configured in `pyproject.toml`; no separate command was run.
+- Security, privacy, accessibility, performance, and compatibility implications were considered. Compatibility impact is limited to rejecting previously accepted over-limit inputs that firmware rejects.
+- Follow-ups: none.

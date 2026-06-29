@@ -4,12 +4,14 @@ from labbench_comm.devices.lio import (
     AnalogChannel,
     AnalogInputMessage,
     ButtonMessage,
+    CalibratorID,
     ClearPrograms,
     DeviceState,
     EcpError,
     EventID,
     EventMessage,
     GetAnalogSignal,
+    GetEndianness,
     GetEvent,
     GetInterfaceStatus,
     InstructionType,
@@ -19,6 +21,7 @@ from labbench_comm.devices.lio import (
     ResponseDevice,
     ResponsePort,
     ResponseSubClass,
+    SetIndicators,
     SetInterfaceLogic,
     SetStimulusProgram,
     SetTrigger,
@@ -31,6 +34,7 @@ from labbench_comm.devices.lio import (
     TriggerInstruction,
     UpdateRate,
     VoltageLevel,
+    WriteCalibration,
     from_fixed_point,
     saturate,
 )
@@ -162,11 +166,22 @@ def test_lio_helpers_and_enum_values():
 
 @pytest.mark.unittest
 def test_lio_subpackage_imports_remain_available():
+    import labbench_comm.devices.lio as lio
+    import labbench_comm.devices.lio.functions as functions
+
+    from labbench_comm.devices.lio.functions import GetEndianness as FunctionGetEndianness
+    from labbench_comm.devices.lio.functions import SetIndicators as FunctionSetIndicators
     from labbench_comm.devices.lio.functions import SetVoltage as FunctionSetVoltage
+    from labbench_comm.devices.lio.functions import WriteCalibration as FunctionWriteCalibration
     from labbench_comm.devices.lio.messages import StatusMessage as MessageStatus
 
+    assert FunctionGetEndianness is GetEndianness
+    assert FunctionSetIndicators is SetIndicators
     assert FunctionSetVoltage is SetVoltage
+    assert FunctionWriteCalibration is WriteCalibration
     assert MessageStatus is StatusMessage
+    assert "ResetCalibration" not in functions.__all__
+    assert "ResetCalibration" not in lio.__all__
 
 
 @pytest.mark.unittest
@@ -215,6 +230,71 @@ def test_read_calibration_decodes_fixed_point_record():
     assert function.bb == -4096
     assert function.maximum == 1000
     assert function.checksum == 0x55
+
+
+@pytest.mark.unittest
+def test_get_endianness_decodes_marker():
+    function = GetEndianness()
+    function.response.insert_uint16(0, 1)
+
+    assert function.code == 0x03
+    assert function.request.length == 0
+    assert function.response.length == 2
+    assert function.create_dispatcher().code == 0x03
+    assert function.endian_marker == 1
+
+
+@pytest.mark.unittest
+def test_set_indicators_serializes_idd_request_fields():
+    function = SetIndicators()
+    function.port = ResponsePort.RESPONSE_PORT02
+    function.led_bitfield = 0xA5
+    function.duration = 0x01020304
+
+    assert function.code == 0x12
+    assert function.request.length == 6
+    assert function.response.length == 0
+    assert function.create_dispatcher().code == 0x12
+    assert function.port is ResponsePort.RESPONSE_PORT02
+    assert function.request.get_byte(0) == 1
+    assert function.led_bitfield == 0xA5
+    assert function.request.get_byte(1) == 0xA5
+    assert function.duration == 0x01020304
+    assert function.request.get_uint32(2) == 0x01020304
+    assert function.request.to_bytes() == b"\x12\x06\x01\xa5\x04\x03\x02\x01"
+
+
+@pytest.mark.unittest
+def test_write_calibration_serializes_idd_request_fields():
+    function = WriteCalibration()
+    function.calibrator = CalibratorID.ID_RSP02_CALIBRATOR
+    function.valid_marker = 0xC9
+    function.ab = 8192
+    function.bb = -4096
+    function.maximum = 1000
+    function.checksum = 0x55
+
+    assert function.code == 0x41
+    assert function.request.length == 13
+    assert function.response.length == 0
+    assert function.create_dispatcher().code == 0x41
+    assert function.calibrator is CalibratorID.ID_RSP02_CALIBRATOR
+    assert function.request.get_byte(0) == 1
+    assert function.valid_marker == 0xC9
+    assert function.request.get_byte(1) == 0xC9
+    assert function.a == 2.0
+    assert function.ab == 8192
+    assert function.request.get_int32(2) == 8192
+    assert function.b == -1.0
+    assert function.bb == -4096
+    assert function.request.get_int32(6) == -4096
+    assert function.maximum == 1000
+    assert function.request.get_uint16(10) == 1000
+    assert function.checksum == 0x55
+    assert function.request.get_byte(12) == 0x55
+    assert function.request.to_bytes() == (
+        b"\x41\x0d\x01\xc9\x00\x20\x00\x00\x00\xf0\xff\xff\xe8\x03\x55"
+    )
 
 
 @pytest.mark.unittest

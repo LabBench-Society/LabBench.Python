@@ -2,7 +2,7 @@
 
 - **ID:** `T0002`
 - **Title:** `Align the LIO function surface with implemented IDD functions`
-- **Status:** `Ready`
+- **Status:** `Review`
 - **Type:** `Feature`
 - **Related Work:** `.documentation/documentation/lio/interface-design-description.md`, `T0001`
 
@@ -64,24 +64,24 @@ Add the LIO function classes that the IDD documents but the Python LIO package d
 
 ## Acceptance Criteria
 
-- [ ] `GetEndianness().code == 0x03`, request length is `0`, response length is `2`, and a response with bytes `01 00` decodes as marker `1`.
-- [ ] `SetIndicators().code == 0x12`, request length is `6`, response length is `0`, and setting port, LED bitfield, and duration writes offsets `0`, `1`, and `2..5` exactly as the IDD specifies.
-- [ ] `WriteCalibration().code == 0x41`, request length is `13`, response length is `0`, and all request fields map to the IDD offsets.
-- [ ] New function classes are importable from both `labbench_comm.devices.lio.functions` and `labbench_comm.devices.lio`.
-- [ ] `ResetCalibration` is no longer exported from `labbench_comm.devices.lio.functions` or `labbench_comm.devices.lio` unless implementation finds a newer IDD entry proving `0x43` is implemented; in that case the task notes the evidence in `Implementation Agent Notes`.
-- [ ] Unit tests cover the new packet shapes and public exports.
+- [x] `GetEndianness().code == 0x03`, request length is `0`, response length is `2`, and a response with bytes `01 00` decodes as marker `1`.
+- [x] `SetIndicators().code == 0x12`, request length is `6`, response length is `0`, and setting port, LED bitfield, and duration writes offsets `0`, `1`, and `2..5` exactly as the IDD specifies.
+- [x] `WriteCalibration().code == 0x41`, request length is `13`, response length is `0`, and all request fields map to the IDD offsets.
+- [x] New function classes are importable from both `labbench_comm.devices.lio.functions` and `labbench_comm.devices.lio`.
+- [x] `ResetCalibration` is no longer exported from `labbench_comm.devices.lio.functions` or `labbench_comm.devices.lio` unless implementation finds a newer IDD entry proving `0x43` is implemented; in that case the task notes the evidence in `Implementation Agent Notes`.
+- [x] Unit tests cover the new packet shapes and public exports.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass.
-- [ ] The implementation follows existing repository patterns and keeps the change scoped to this issue.
-- [ ] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
-- [ ] Relevant manual validation is completed and documented in this issue.
-- [ ] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
-- [ ] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
-- [ ] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
-- [ ] No unrelated files, generated artifacts, or user changes are reverted or modified.
-- [ ] Any follow-up work is explicitly listed with rationale.
+- [x] All acceptance criteria pass.
+- [x] The implementation follows existing repository patterns and keeps the change scoped to this issue.
+- [x] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
+- [x] Relevant manual validation is completed and documented in this issue.
+- [x] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
+- [x] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
+- [x] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
+- [x] No unrelated files, generated artifacts, or user changes are reverted or modified.
+- [x] Any follow-up work is explicitly listed with rationale.
 
 ## Implementation Notes
 
@@ -105,4 +105,25 @@ Add the LIO function classes that the IDD documents but the Python LIO package d
 
 ## Implementation Agent Notes
 
-None
+Implemented in this task:
+
+- Added `GetEndianness`, `SetIndicators`, and `WriteCalibration` LIO functions with IDD-backed packet codes, lengths, field offsets, and exports.
+- Removed the stale `ResetCalibration` public API and deleted `src/labbench_comm/devices/lio/functions/reset_calibration.py` after confirming no internal `src`, `tests`, or `examples` references remained.
+- Added unit coverage for packet shapes, field offsets, top-level and subpackage imports, and absence of `ResetCalibration` from public `__all__` lists.
+- No README or example updates were needed: `rg -n "ResetCalibration|GET_ENDIANNESS|SET_INDICATORS|WRITE_CALIBRATION|GetEndianness|SetIndicators|WriteCalibration" README.md .documentation examples` found no stale README/example references, and the IDD already documents the functions.
+- No lint, type-check, or formatting commands are configured in `pyproject.toml`, README, or `.github/workflows/ci.yml`.
+
+Validation results:
+
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k get_endianness`: passed.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k set_indicators`: passed.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py -k write_calibration`: passed.
+- `pytest -m unittest tests/devices/lio/test_lio_central.py`: passed, 30 tests.
+- `pytest -m unittest`: passed, 75 selected tests, 2 deselected. Pytest emitted a cache warning for `.pytest_cache`, but tests passed.
+- `rg -n "GetEndianness|SetIndicators|WriteCalibration|ResetCalibration|0x43" src/labbench_comm/devices/lio tests/devices/lio/test_lio_central.py`: confirmed new exports/tests and no remaining `0x43` implementation.
+- `python -m build`: first sandboxed attempt failed because isolated build dependency installation could not reach PyPI; rerun with approved network access passed and built `labbench_comm-0.1.2.tar.gz` and `labbench_comm-0.1.2-py3-none-any.whl`.
+- `python -m twine check dist/*`: first sandboxed attempt failed with a permission error reading the built wheel; rerun with elevated permissions passed for both distributions.
+
+Follow-ups:
+
+- None.

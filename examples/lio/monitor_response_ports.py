@@ -18,7 +18,7 @@ async def main() -> None:
 
         print("Configuring response port requirements")
         required = lio.SetRequiredDevices()
-        required.port01 = lio.ResponseDevice.DEVICE_RESPONSE
+        required.port01 = lio.ResponseDevice.DEVICE_RESPONSE_INPUT
         required.port01_subclass = lio.ResponseSubClass.DEVICE_SUBCLASS_NONE
         required.port02 = lio.ResponseDevice.DEVICE_NONE
         required.port02_subclass = lio.ResponseSubClass.DEVICE_SUBCLASS_NONE

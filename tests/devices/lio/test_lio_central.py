@@ -141,7 +141,16 @@ def test_lio_central_unknown_peripheral_error_string():
 @pytest.mark.unittest
 def test_lio_helpers_and_enum_values():
     assert AnalogChannel.SUPPLY_VOLTAGE == 11
-    assert ResponseDevice.DEVICE_REPONSE_INPUT == 7
+    assert DeviceState.STATE_IDLE == 0
+    assert DeviceState.STATE_PENDING == 1
+    assert DeviceState.STATE_ACTIVE == 2
+    assert DeviceState.STATE_ERROR == 3
+    assert ResponseDevice.DEVICE_RESERVED01 == 4
+    assert ResponseDevice.DEVICE_RESPONSE_INPUT == 7
+    assert ResponseDevice(4).name == "DEVICE_RESERVED01"
+    assert ResponseDevice(7).name == "DEVICE_RESPONSE_INPUT"
+    assert ResponseDevice.DEVICE_RESPONSE is ResponseDevice.DEVICE_RESERVED01
+    assert ResponseDevice.DEVICE_REPONSE_INPUT is ResponseDevice.DEVICE_RESPONSE_INPUT
     assert UpdateRate.CLK20000Hz.to_rate() == 20000
     assert UpdateRate.from_rate(1000) is UpdateRate.CLK1000Hz
     assert UpdateRate.CLK1000Hz.milliseconds_to_samples(2.5) == 2
@@ -336,10 +345,31 @@ def test_lio_messages_decode_and_validate_lengths():
 
 
 @pytest.mark.unittest
+@pytest.mark.parametrize(
+    "raw_state,expected_state",
+    [
+        (0, DeviceState.STATE_IDLE),
+        (3, DeviceState.STATE_ERROR),
+    ],
+)
+def test_status_message_decodes_state_byte_directly(raw_state, expected_state):
+    packet = Packet(0x80, 7)
+    packet.insert_byte(0, raw_state)
+    packet.insert_byte(1, ResponseDevice.DEVICE_NONE)
+    packet.insert_byte(2, ResponseSubClass.DEVICE_SUBCLASS_NONE)
+    packet.insert_byte(3, ResponseDevice.DEVICE_NONE)
+    packet.insert_byte(4, ResponseSubClass.DEVICE_SUBCLASS_NONE)
+    packet.insert_byte(5, 0)
+    packet.insert_byte(6, SystemError.NO_ERROR)
+
+    assert StatusMessage(packet).state is expected_state
+
+
+@pytest.mark.unittest
 def test_signal_message_decodes_scaling():
     packet = Packet(0x90, 21)
     packet.insert_byte(0, ResponsePort.RESPONSE_PORT01)
-    packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE)
+    packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE_INPUT)
     packet.insert_byte(2, ResponseSubClass.DEVICE_SUBCLASS01)
     packet.insert_uint16(3, 512)
     packet.insert_int32(5, 4096)
@@ -372,7 +402,7 @@ def test_lio_central_updates_state_and_callbacks_from_messages():
 
     status_packet = Packet(0x80, 7)
     status_packet.insert_byte(0, 0)
-    status_packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE)
+    status_packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE_INPUT)
     status_packet.insert_byte(2, ResponseSubClass.DEVICE_SUBCLASS01)
     status_packet.insert_byte(3, ResponseDevice.DEVICE_NONE)
     status_packet.insert_byte(4, ResponseSubClass.DEVICE_SUBCLASS_NONE)
@@ -382,13 +412,13 @@ def test_lio_central_updates_state_and_callbacks_from_messages():
     device.on_status_message(StatusMessage(status_packet))
 
     assert device.state is DeviceState.STATE_IDLE
-    assert device.port01 is ResponseDevice.DEVICE_RESPONSE
+    assert device.port01 is ResponseDevice.DEVICE_RESPONSE_INPUT
     assert device.power
     assert status_seen[0][0] is device
 
     signal_packet = Packet(0x90, 21)
     signal_packet.insert_byte(0, ResponsePort.RESPONSE_PORT01)
-    signal_packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE)
+    signal_packet.insert_byte(1, ResponseDevice.DEVICE_RESPONSE_INPUT)
     signal_packet.insert_byte(2, ResponseSubClass.DEVICE_SUBCLASS01)
     signal_packet.insert_uint16(3, 512)
     signal_packet.insert_int32(5, 4096)

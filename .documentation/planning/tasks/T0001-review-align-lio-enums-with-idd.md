@@ -2,7 +2,7 @@
 
 - **ID:** `T0001`
 - **Title:** `Align LIO status and response-device enums with the IDD`
-- **Status:** `Ready`
+- **Status:** `Review`
 - **Type:** `Bug`
 - **Related Work:** `.documentation/documentation/lio/interface-design-description.md`
 
@@ -56,24 +56,24 @@ Correct the public LIO enum values and status-message decoding so they match the
 
 ## Acceptance Criteria
 
-- [ ] `DeviceState.STATE_IDLE == 0`, `STATE_PENDING == 1`, `STATE_ACTIVE == 2`, and `STATE_ERROR == 3`.
-- [ ] `StatusMessage(Packet(0x80, 7) with byte 0 set to 0).state is DeviceState.STATE_IDLE` without adding an offset.
-- [ ] `StatusMessage(Packet(0x80, 7) with byte 0 set to 3).state is DeviceState.STATE_ERROR`.
-- [ ] `ResponseDevice.DEVICE_RESERVED01 == 4` and `ResponseDevice.DEVICE_RESPONSE_INPUT == 7` are available from `labbench_comm.devices.lio`.
-- [ ] Existing LIO state and callback behavior still works after receiving a status message.
-- [ ] Tests no longer require `ResponseDevice.DEVICE_REPONSE_INPUT` as the canonical IDD name.
+- [x] `DeviceState.STATE_IDLE == 0`, `STATE_PENDING == 1`, `STATE_ACTIVE == 2`, and `STATE_ERROR == 3`.
+- [x] `StatusMessage(Packet(0x80, 7) with byte 0 set to 0).state is DeviceState.STATE_IDLE` without adding an offset.
+- [x] `StatusMessage(Packet(0x80, 7) with byte 0 set to 3).state is DeviceState.STATE_ERROR`.
+- [x] `ResponseDevice.DEVICE_RESERVED01 == 4` and `ResponseDevice.DEVICE_RESPONSE_INPUT == 7` are available from `labbench_comm.devices.lio`.
+- [x] Existing LIO state and callback behavior still works after receiving a status message.
+- [x] Tests no longer require `ResponseDevice.DEVICE_REPONSE_INPUT` as the canonical IDD name.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria pass.
-- [ ] The implementation follows existing repository patterns and keeps the change scoped to this issue.
-- [ ] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
-- [ ] Relevant manual validation is completed and documented in this issue.
-- [ ] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
-- [ ] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
-- [ ] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
-- [ ] No unrelated files, generated artifacts, or user changes are reverted or modified.
-- [ ] Any follow-up work is explicitly listed with rationale.
+- [x] All acceptance criteria pass.
+- [x] The implementation follows existing repository patterns and keeps the change scoped to this issue.
+- [x] Automated tests are added or updated for changed behavior, or a clear reason is documented for why tests are not appropriate.
+- [x] Relevant manual validation is completed and documented in this issue.
+- [x] Build, lint, type-check, formatting, and test commands relevant to the touched code pass.
+- [x] User-facing text, docs, configuration, examples, or migration notes are updated when behavior changes.
+- [x] Security, privacy, accessibility, performance, and compatibility implications were considered for the changed surface.
+- [x] No unrelated files, generated artifacts, or user changes are reverted or modified.
+- [x] Any follow-up work is explicitly listed with rationale.
 
 ## Implementation Notes
 
@@ -97,4 +97,13 @@ Correct the public LIO enum values and status-message decoding so they match the
 
 ## Implementation Agent Notes
 
-None
+- Status moved to `Review` after implementation and validation.
+- Validation results:
+  - `pytest -m unittest tests/devices/lio/test_lio_central.py` initially failed as expected after adding enum-value assertions: `DeviceState.STATE_IDLE` was still `1`.
+  - `pytest -m unittest tests/devices/lio/test_lio_central.py`: passed, `27 passed`, with one pytest cache warning.
+  - `python -m pytest -m unittest -v`: passed, `72 passed, 2 deselected`, with one pytest cache warning.
+  - `python -m build`: first failed in the sandbox because isolated build dependency installation could not reach PyPI; reran with approved escalation and passed, building `labbench_comm-0.1.2.tar.gz` and `labbench_comm-0.1.2-py3-none-any.whl`.
+- Manual checks:
+  - Inspected `src/labbench_comm/devices/lio/definitions.py`; IDD names are defined before compatibility aliases, so `ResponseDevice(4).name` is `DEVICE_RESERVED01` and `ResponseDevice(7).name` is `DEVICE_RESPONSE_INPUT`.
+  - No configured lint, type-check, or formatting commands were found in `pyproject.toml`, README, or CI.
+- Follow-ups: None.

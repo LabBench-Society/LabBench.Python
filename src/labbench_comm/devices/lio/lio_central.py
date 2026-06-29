@@ -61,7 +61,7 @@ class LIOCentral(Device):
         self.target02_low_limit = 0.0
         self.target02_high_limit = 0.0
 
-        self.state = DeviceState.STATE_NOT_CONNECTED
+        self.state = None
         self.error = SystemError.NO_ERROR
         self.power = False
         self.log_events = True

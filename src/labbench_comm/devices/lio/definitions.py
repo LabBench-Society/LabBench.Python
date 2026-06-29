@@ -61,11 +61,10 @@ class CalibratorID(IntEnum):
 
 
 class DeviceState(IntEnum):
-    STATE_NOT_CONNECTED = 0
-    STATE_IDLE = 1
-    STATE_PENDING = 2
-    STATE_ACTIVE = 3
-    STATE_ERROR = 4
+    STATE_IDLE = 0
+    STATE_PENDING = 1
+    STATE_ACTIVE = 2
+    STATE_ERROR = 3
 
 
 class EcpError(IntEnum):
@@ -141,12 +140,14 @@ class ResponseDevice(IntEnum):
     DEVICE_SCALE = 1
     DEVICE_DIGITAL = 2
     DEVICE_BUTTON = 3
-    DEVICE_RESPONSE = 4
+    DEVICE_RESERVED01 = 4
     DEVICE_SENSOR = 5
     DEVICE_TRIGGER = 6
-    DEVICE_REPONSE_INPUT = 7
+    DEVICE_RESPONSE_INPUT = 7
     DEVICE_RESERVED02 = 8
     DEVICE_RESERVED03 = 9
+    DEVICE_RESPONSE = 4
+    DEVICE_REPONSE_INPUT = 7
 
 
 class ResponsePort(IntEnum):

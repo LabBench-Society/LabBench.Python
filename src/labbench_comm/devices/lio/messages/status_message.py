@@ -16,7 +16,7 @@ class StatusMessage(_LIOMessage):
 
     @property
     def state(self) -> DeviceState:
-        return DeviceState(self.packet.get_byte(0) + 1)
+        return DeviceState(self.packet.get_byte(0))
 
     @property
     def port01(self) -> ResponseDevice:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Ready Tasks"
+  short_description: "Implement all ready Markdown planning tasks."
+  default_prompt: "Use $implement-ready-tasks to implement all tasks with Status: Ready."

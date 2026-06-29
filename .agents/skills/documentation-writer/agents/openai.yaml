@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentation Writer"
+  short_description: "Write accurate, traceable repository documentation."
+  default_prompt: "Use $documentation-writer to create or update repository documentation."

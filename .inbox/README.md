@@ -1,0 +1,1 @@
+Place to for the user to temporarely drop documents that are to be used by the AI agent.

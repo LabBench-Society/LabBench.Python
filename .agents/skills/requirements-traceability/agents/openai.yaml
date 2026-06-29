@@ -1,0 +1,4 @@
+interface:
+  display_name: "Requirements Traceability"
+  short_description: "Maintain lightweight requirements and RVTM links"
+  default_prompt: "Use $requirements-traceability to update requirements and verification traceability for this change."

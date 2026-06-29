@@ -2,6 +2,34 @@
 
 More specific `AGENTS.md` files override this file.
 
+# Purpose
+
+The purpose of the library is to implement a communications library for LabBench devices.
+
+# Content
+
+This is a Python 3.12+ `src/` package named `labbench_comm`, with typed package metadata (`py.typed`) and a very small CLI that currently only exposes `labbench-comm --version`. The public substance is the library API, not the CLI.
+
+The core runtime stack is layered as:
+
+- `serial`: `PySerialIO` wraps pyserial with non-blocking reads; `AsyncSerialConnection` owns the async lifecycle, background reader task, and async writes.
+- `protocols`: `Frame`/`Destuffer` implement DLE/STX/ETX byte framing, `Packet` implements compact and extended packet layouts with optional address and additive/CRC8-CCITT checksums, `BusCentral` serializes request/response function execution and dispatches unsolicited messages, and `Device` adds retry, identification, ping, error-string, and async-context-manager behavior.
+- `devices`: concrete CPAR+ and LabBench I/O device packages provide enums, packet codecs, `DeviceFunction` subclasses, `DeviceMessage` subclasses, and central classes that maintain latest device state plus callback lists.
+
+Protocol conventions matter for most changes: function packets use codes below `0x80`; unsolicited messages use codes at or above `0x80`; error/NAK packets use code `0x00`; numeric packet helpers are little-endian unless `Packet.reverse_endianity` is explicitly set; payload bytes equal to DLE (`0xFF`) are escaped at the frame layer.
+
+Supported device surfaces are:
+
+- CPAR+: `CPARplusCentral` targets manufacturer `InventorsWay`, device id `4`, baudrate `38400`, status/event messages, operating mode and waveform-program functions, a 6-byte waveform instruction codec, stimulation-state tracking, captured stimulation samples, and an optional background ping loop used as a stimulation dead-man mechanism.
+- LIO: `LIOCentral` targets manufacturer `InventorsWay`, device id `2`, firmware major version `>= 2`, baudrate `57600`, status/event/signal/button/trigger/analog/threshold messages, response-port state tracking, calibration/event access, waveform/stimulus/trigger-sequence output functions, direct voltage and interface logic functions, and callback lists for incoming message types.
+
+The examples are hardware workflows, not isolated sample snippets. LIO examples cover identification, input monitoring, analog reads, voltage output, stimulus programs, waveform output, trigger sequences, and calibration/event records. CPAR+ examples cover pressure stimulus workflows and plotting stimulation data. Output-driving examples can actuate connected hardware.
+
+Tests are split by intent: `pytest -m unittest` covers packet/frame behavior, message dispatch, async serial lifecycle, LIO function/message packet shapes and scaling, CPAR waveform encoding boundaries, and package version metadata. `pytest -m hardware` is for connected-device integration, including generic identification and CPAR+ hardware checks.
+
+`.documentation/documentation/lio/interface-design-description.md` is a detailed LIO ECP reference derived from firmware/CommLib evidence. Use it when changing LIO packet layouts, message fields, function codes, or semantics; do not treat the root README as the protocol authority.
+
+
 # Overall rules
 
 Your job is to assist a human writing code and documentation.

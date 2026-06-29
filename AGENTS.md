@@ -43,7 +43,7 @@ Change only the minimal code needed to implement the prompt or task.
   ```PowerShell
   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "[console]::Beep(800, 200)"
   ```
-  Run the exact command above with escalated shell permissions directly so it is not attempted inside the filesystem sandbox first. Keep the `-Command` argument quoted so PowerShell parses `Beep(800, 200)` as a method call. This applies regardless of outcome: completed, blocked, failed, documentation-only, or analysis-only. The beep is notification only, not validation or task status.
+Run the exact command above with escalated shell permissions directly so it is not attempted inside the filesystem sandbox first. Keep the `-Command` argument quoted so PowerShell parses `Beep(800, 200)` as a method call. This applies regardless of outcome: completed, blocked, failed, documentation-only, or analysis-only. The beep is notification only, not validation or task status.
 
 ## Coding style
 

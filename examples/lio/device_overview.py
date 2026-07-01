@@ -13,7 +13,7 @@ async def main() -> None:
     parser.add_argument(
         "--listen",
         type=float,
-        default=3.0,
+        default=1.0,
         help="Seconds to print incoming messages after identification.",
     )
     args = parser.parse_args()
